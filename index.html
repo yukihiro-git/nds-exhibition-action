@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>今日の現場、どれがしんどい？</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0f1118;
+  --surface:#1a1d28;
+  --surface2:#22263a;
+  --border:#2e3450;
+  --accent:#4f8ef7;
+  --accent2:#7c5cfc;
+  --warm:#f5a623;
+  --green:#3ecf8e;
+  --text:#f0f2ff;
+  --text2:#8b92b8;
+  --text3:#4a5070;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Zen Kaku Gothic New',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);touch-action:manipulation}
+
+/* ===== SCREENS ===== */
+.screen{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;
+  transition:opacity .4s ease, transform .4s ease;
+  transform:translateY(20px);
+}
+.screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
+.screen.exit{opacity:0;transform:translateY(-20px)}
+
+/* ===== SCREEN 1: ATTRACT ===== */
+#s1{
+  background:var(--bg);
+  justify-content:center;align-items:center;
+  cursor:pointer;
+  overflow:hidden;
+}
+.attract-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(79,142,247,.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 70%, rgba(124,92,252,.10) 0%, transparent 60%);
+}
+.attract-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(79,142,247,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,142,247,.06) 1px, transparent 1px);
+  background-size:48px 48px;
+}
+.attract-inner{
+  position:relative;z-index:1;
+  text-align:center;padding:40px;
+  max-width:640px;
+}
+.attract-eyebrow{
+  font-size:12px;letter-spacing:.2em;color:var(--accent);
+  font-weight:500;margin-bottom:28px;
+  display:inline-flex;align-items:center;gap:10px;
+  border:1px solid rgba(79,142,247,.3);
+  padding:6px 16px;border-radius:100px;
+  background:rgba(79,142,247,.08);
+}
+.attract-eyebrow::before{
+  content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 8px var(--accent);
+  animation:blink 2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+.attract-h1{
+  font-family:var(--display);
+  font-size:clamp(36px,7vw,72px);
+  font-weight:900;
+  line-height:1.1;
+  letter-spacing:-.03em;
+  margin-bottom:20px;
+  background:linear-gradient(135deg, #f0f2ff 0%, #8b92b8 60%, #4f8ef7 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.attract-sub{
+  font-size:16px;color:var(--text2);line-height:1.8;
+  margin-bottom:48px;font-weight:300;
+}
+.attract-cta{
+  display:inline-flex;align-items:center;gap:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:100px;
+  font-family:var(--sans);font-size:16px;font-weight:700;
+  padding:18px 40px;cursor:pointer;
+  box-shadow:0 8px 32px rgba(79,142,247,.35);
+  transition:all .2s;letter-spacing:.02em;
+}
+.attract-cta:active{transform:scale(.97)}
+.attract-cta svg{animation:bounce-x 1.5s ease-in-out infinite}
+@keyframes bounce-x{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+
+.attract-note{
+  margin-top:24px;font-size:12px;color:var(--text3);letter-spacing:.08em;
+}
+
+/* floating particles */
+.particle{
+  position:absolute;border-radius:50%;pointer-events:none;
+  animation:float linear infinite;
+}
+@keyframes float{
+  0%{transform:translateY(0) rotate(0deg);opacity:0}
+  10%{opacity:1}
+  90%{opacity:.5}
+  100%{transform:translateY(-100vh) rotate(360deg);opacity:0}
+}
+
+/* ===== SCREEN 2: SELECT ===== */
+#s2{background:var(--bg);overflow:hidden}
+.s2-header{
+  padding:28px 28px 0;
+  flex-shrink:0;
+}
+.s2-back{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--text3);cursor:pointer;
+  margin-bottom:16px;transition:color .2s;
+  background:none;border:none;font-family:var(--sans);
+}
+.s2-back:hover{color:var(--text2)}
+.s2-step{
+  font-size:11px;letter-spacing:.14em;color:var(--accent);
+  text-transform:uppercase;margin-bottom:10px;font-weight:500;
+}
+.s2-title{
+  font-family:var(--display);font-size:clamp(20px,4vw,30px);
+  font-weight:900;line-height:1.2;margin-bottom:6px;
+}
+.s2-desc{font-size:13px;color:var(--text2);font-weight:300}
+
+.s2-body{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:20px 28px 140px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.s2-body::-webkit-scrollbar{width:4px}
+.s2-body::-webkit-scrollbar-track{background:transparent}
+.s2-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.issue-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.issue-card{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:16px;
+  padding:18px 16px;
+  cursor:pointer;
+  transition:all .2s cubic-bezier(.34,1.4,.64,1);
+  user-select:none;
+  position:relative;
+  overflow:hidden;
+}
+.issue-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--card-color,.3) 0%,transparent 60%);
+  opacity:0;transition:opacity .3s;
+}
+.issue-card.selected{
+  border-color:var(--card-color,var(--accent));
+  background:var(--surface2);
+  transform:scale(.98);
+}
+.issue-card.selected::before{opacity:.08}
+.issue-card.selected .ic-check{opacity:1;transform:scale(1)}
+
+.ic-emoji{font-size:28px;margin-bottom:10px;display:block;line-height:1}
+.ic-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3}
+.ic-after{
+  font-size:11px;color:var(--text3);line-height:1.5;
+  font-weight:300;
+}
+.issue-card.selected .ic-after{color:var(--card-color,var(--accent));font-weight:400}
+
+.ic-check{
+  position:absolute;top:12px;right:12px;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--card-color,var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:scale(.5);
+  transition:all .25s cubic-bezier(.34,1.6,.64,1);
+}
+.ic-check svg{width:12px;height:12px}
+
+/* preview bar */
+.preview-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:linear-gradient(0deg,var(--bg) 0%,transparent 100%);
+  padding:16px 28px 28px;
+  pointer-events:none;
+  transition:opacity .3s;
+}
+.preview-bar.has-selection{pointer-events:all}
+.preview-content{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px 18px;
+  display:flex;align-items:center;gap:14px;
+  opacity:0;transform:translateY(16px);
+  transition:all .3s cubic-bezier(.34,1.2,.64,1);
+}
+.preview-bar.has-selection .preview-content{opacity:1;transform:translateY(0)}
+.preview-text{flex:1;font-size:13px;color:var(--text2)}
+.preview-text strong{color:var(--text);font-weight:700}
+.preview-btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:10px;
+  font-family:var(--sans);font-size:14px;font-weight:700;
+  padding:12px 22px;cursor:pointer;white-space:nowrap;
+  transition:opacity .2s;
+}
+.preview-btn:active{opacity:.85}
+
+/* ===== SCREEN 3: KARTE ===== */
+#s3{background:var(--bg);overflow:hidden}
+.s3-header{
+  padding:28px 28px 0;flex-shrink:0;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.s3-header-left{}
+.s3-step{font-size:11px;letter-spacing:.14em;color:var(--green);text-transform:uppercase;margin-bottom:8px;font-weight:500}
+.s3-title{font-family:var(--display);font-size:clamp(20px,4vw,28px);font-weight:900;line-height:1.2}
+
+.s3-body{flex:1;overflow-y:auto;padding:20px 28px 160px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.s3-body::-webkit-scrollbar{width:4px}
+.s3-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* karte sections */
+.karte-issues{
+  display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;
+}
+.karte-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:100px;font-size:12px;font-weight:500;
+  border:1px solid;
+}
+
+.karte-block{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;margin-bottom:14px;
+}
+.karte-block-header{
+  padding:14px 18px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--border);
+}
+.kb-emoji{font-size:20px}
+.kb-title{font-size:14px;font-weight:700;flex:1}
+.kb-product{
+  font-size:10px;font-family:monospace;letter-spacing:.06em;
+  padding:3px 8px;border-radius:4px;font-weight:400;
+}
+.karte-block-body{padding:14px 18px}
+.kb-before{
+  font-size:12px;color:var(--text2);margin-bottom:10px;
+  padding:8px 12px;background:rgba(255,255,255,.03);
+  border-radius:8px;border-left:3px solid var(--text3);
+  line-height:1.6;
+}
+.kb-arrow{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;color:var(--text3);margin-bottom:10px;
+}
+.kb-arrow::before,.kb-arrow::after{content:'';flex:1;height:1px;background:var(--border)}
+.kb-after{
+  font-size:13px;font-weight:500;color:var(--text);
+  padding:10px 14px;border-radius:8px;
+  line-height:1.6;
+}
+
+/* CTA footer */
+.s3-footer{
+  position:fixed;bottom:0;left:0;right:0;
+  padding:16px 28px 28px;
+  background:linear-gradient(0deg,var(--bg) 60%,transparent 100%);
+}
+.s3-cta-row{display:flex;gap:10px}
+.cta-main{
+  flex:1;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:12px;
+  font-family:var(--sans);font-size:14px;font-weight:700;
+  padding:15px;cursor:pointer;transition:opacity .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.cta-main:active{opacity:.85}
+.cta-sub{
+  background:var(--surface);color:var(--text);
+  border:1px solid var(--border);border-radius:12px;
+  font-family:var(--sans);font-size:13px;font-weight:500;
+  padding:15px 18px;cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.cta-sub:active{background:var(--surface2)}
+
+/* email modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);
+  z-index:100;display:none;align-items:flex-end;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex}
+.modal{
+  width:100%;background:var(--surface);
+  border-radius:24px 24px 0 0;
+  padding:28px 28px 48px;
+  animation:slide-up .3s cubic-bezier(.34,1.2,.64,1);
+}
+@keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-family:var(--display);font-size:20px;font-weight:900;margin-bottom:6px}
+.modal-desc{font-size:13px;color:var(--text2);margin-bottom:20px;font-weight:300}
+.modal-inp{
+  width:100%;background:var(--surface2);
+  border:1.5px solid var(--border);border-radius:10px;
+  font-family:var(--sans);font-size:16px;color:var(--text);
+  padding:14px 16px;margin-bottom:10px;transition:border-color .2s;
+}
+.modal-inp:focus{outline:none;border-color:var(--accent)}
+.modal-inp::placeholder{color:var(--text3)}
+.modal-send{
+  width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:10px;
+  font-family:var(--sans);font-size:15px;font-weight:700;
+  padding:15px;cursor:pointer;margin-bottom:10px;
+}
+.modal-cancel{
+  width:100%;background:none;border:none;
+  font-family:var(--sans);font-size:13px;color:var(--text3);
+  padding:10px;cursor:pointer;
+}
+.modal-success{
+  display:none;text-align:center;padding:20px 0;
+}
+.modal-success.show{display:block}
+.modal-success-icon{font-size:48px;margin-bottom:12px}
+.modal-success-text{font-size:16px;font-weight:700;color:var(--green)}
+.modal-success-sub{font-size:13px;color:var(--text2);margin-top:6px}
+
+.reset-btn{
+  position:fixed;top:20px;right:20px;z-index:200;
+  background:rgba(255,255,255,.08);border:1px solid var(--border);
+  color:var(--text3);border-radius:100px;
+  font-family:var(--sans);font-size:11px;letter-spacing:.08em;
+  padding:6px 14px;cursor:pointer;display:none;
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== PRINT SHEET ===== */
+@media print {
+  body > *:not(#pdf-sheet) { display: none !important; }
+  #pdf-sheet { display: block !important; }
+  @page { size: A4 portrait; margin: 0; }
+}
+#pdf-sheet {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,.6);
+  overflow-y: auto; overflow-x: hidden;
+  padding: 32px 16px 60px;
+  box-sizing: border-box;
+  font-family: 'Noto Sans JP','Hiragino Kaku Gothic ProN','Meiryo',sans-serif;
+}
+#pdf-sheet.open { display: block; }
+.ps-wrap {
+  width: 210mm; min-height: 297mm; margin: 0 auto;
+  background: #fff; position: relative; padding: 0 0 60px;
+  box-shadow: 0 4px 40px rgba(0,0,0,.4); border-radius: 4px;
+}
+.ps-header {
+  background: #1a3a6b; color: #fff;
+  padding: 18px 26px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ps-logo { font-size: 14px; font-weight: 700; }
+.ps-logo-sub { font-size: 10px; opacity: .7; margin-top: 2px; }
+.ps-date { font-size: 10px; opacity: .65; text-align: right; }
+.ps-title-bar {
+  background: #f4f6fb;
+  border-bottom: 4px solid #1a3a6b;
+  padding: 20px 26px 16px;
+}
+.ps-karte-title { font-size: 20px; font-weight: 900; color: #1a1a1a; letter-spacing: -.02em; }
+.ps-karte-sub { font-size: 12px; color: #666; margin-top: 4px; }
+.ps-section { padding: 16px 26px 0; }
+.ps-section-label {
+  font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+  color: #999; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ps-section-label::after { content: ''; flex: 1; height: 1px; background: #e8e8e8; }
+.ps-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.ps-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600;
+  padding: 4px 12px; border-radius: 100px; border: 1.5px solid;
+}
+.ps-block {
+  border: 1px solid #e8e8e8; border-radius: 8px;
+  overflow: hidden; margin-bottom: 12px;
+}
+.ps-block-header {
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.ps-block-emoji { font-size: 18px; }
+.ps-block-title { font-size: 13px; font-weight: 700; flex: 1; color: #1a1a1a; }
+.ps-block-product {
+  font-size: 9px; letter-spacing: .06em;
+  padding: 3px 8px; border-radius: 4px; font-weight: 500;
+}
+.ps-block-body { padding: 12px 14px; }
+.ps-before {
+  font-size: 11px; color: #666;
+  padding: 7px 11px; background: #f8f8f8;
+  border-left: 3px solid #ccc; border-radius: 0 4px 4px 0;
+  margin-bottom: 8px; line-height: 1.6;
+}
+.ps-arrow {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; color: #bbb; margin-bottom: 8px;
+}
+.ps-arrow::before,.ps-arrow::after{content:'';flex:1;height:1px;background:#eee}
+.ps-after {
+  font-size: 12px; font-weight: 600; color: #1a1a1a;
+  padding: 8px 12px; border-radius: 4px;
+  border-left: 3px solid; line-height: 1.6;
+}
+.ps-staff-note {
+  margin: 4px 26px 0;
+  padding: 12px 16px;
+  background: #f4f6fb; border-radius: 6px;
+  border-left: 4px solid #1a3a6b;
+  font-size: 11px; color: #444; line-height: 1.8;
+}
+.ps-footer {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: #1a3a6b; color: #fff;
+  padding: 10px 26px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 9px;
+}
+.ps-close {
+  position: fixed; top: 16px; right: 16px;
+  background: rgba(0,0,0,.6); color: #fff; border: none;
+  border-radius: 50%; width: 40px; height: 40px; font-size: 20px;
+  cursor: pointer; z-index: 10000;
+  display: flex; align-items: center; justify-content: center;
+}
+@media print { .ps-close { display: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- RESET BTN -->
+<button class="reset-btn" id="reset-btn" onclick="resetApp()">← 最初から</button>
+
+<!-- ===== SCREEN 1: ATTRACT ===== -->
+<section class="screen active" id="s1" onclick="goToS2()">
+  <div class="attract-bg"></div>
+  <div class="attract-grid"></div>
+  <div class="attract-inner">
+    <div class="attract-eyebrow">NDソフトウェア ブースへようこそ</div>
+    <h1 class="attract-h1">今日の現場、<br>どれがしんどい？</h1>
+    <p class="attract-sub">
+      介護現場のリアルな困りごとを<br>
+      タップするだけで課題カルテを作ります
+    </p>
+    <button class="attract-cta">
+      タップして始める
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M4 9h10M10 5l4 4-4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <p class="attract-note">所要時間：約1分　個人情報不要で始められます</p>
+  </div>
+</section>
+
+<!-- ===== SCREEN 2: SELECT ===== -->
+<section class="screen" id="s2">
+  <div class="s2-header">
+    <button class="s2-back" onclick="goToS1()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      戻る
+    </button>
+    <div class="s2-step">STEP 1 / 2</div>
+    <div class="s2-title">今、いちばん大変なことは？</div>
+    <div class="s2-desc">当てはまるものをすべてタップ（複数選択OK）</div>
+  </div>
+
+  <div class="s2-body">
+    <div class="issue-grid" id="issue-grid"></div>
+  </div>
+
+  <div class="preview-bar" id="preview-bar">
+    <div class="preview-content">
+      <div class="preview-text"><strong id="sel-count">0</strong>件の課題を選択中</div>
+      <button class="preview-btn" onclick="goToS3()">課題カルテを見る →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SCREEN 3: KARTE ===== -->
+<section class="screen" id="s3">
+  <div class="s3-header">
+    <div class="s3-header-left">
+      <div class="s3-step">STEP 2 / 2　課題カルテ</div>
+      <div class="s3-title">あなたの施設の<br>課題が整理されました</div>
+    </div>
+    <button class="s2-back" onclick="goToS2()" style="flex-shrink:0;margin-top:4px">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      修正
+    </button>
+  </div>
+
+  <div class="s3-body" id="karte-body"></div>
+
+  <div class="s3-footer">
+    <div class="s3-cta-row">
+      <button class="cta-main" onclick="openModal()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12v9a1 1 0 01-1 1H3a1 1 0 01-1-1V4zm4 0V3a1 1 0 011-1h2a1 1 0 011 1v1" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>
+        カルテをメールで受け取る
+      </button>
+      <button class="cta-sub" onclick="printKarte()" title="PDFとして保存">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 10v3h10v-3M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        PDF
+      </button>
+      <button class="cta-sub" onclick="callStaff()">スタッフを呼ぶ</button>
+    </div>
+  </div>
+</section>
+
+<!-- EMAIL MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div id="modal-form">
+      <div class="modal-title">カルテをお送りします</div>
+      <div class="modal-desc">メールアドレスを入力するだけ。<br>担当者から詳細をご案内します。</div>
+      <input class="modal-inp" type="email" id="modal-email" placeholder="メールアドレス">
+      <input class="modal-inp" type="text"  id="modal-org"   placeholder="法人名・施設名（任意）">
+      <button class="modal-send" onclick="sendKarte()">カルテを受け取る</button>
+      <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
+    </div>
+    <div class="modal-success" id="modal-success">
+      <div class="modal-success-icon">✅</div>
+      <div class="modal-success-text">送信しました！</div>
+      <div class="modal-success-sub">担当者よりご連絡いたします。<br>本日はご来場ありがとうございました。</div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF SHEET -->
+<div id="pdf-sheet"></div>
+
+<script>
+// ===== データ =====
+const ISSUES = [
+  {
+    id:'record', emoji:'📝', title:'記録・書類が多い',
+    color:'#4f8ef7',
+    before:'ケアの後まとめて入力。残業の主な原因になっている',
+    after:'声で話すだけで記録完了。ケア中にその場で入力できます',
+    product:'ほのぼのVoice / ほのぼのNEXT',
+    productColor:'rgba(79,142,247,.15)',
+  },
+  {
+    id:'billing', emoji:'🧾', title:'請求業務が大変',
+    color:'#3ecf8e',
+    before:'月末の国保連請求で残業続き。返戻対応にも追われる',
+    after:'入力ミスの自動チェックで返戻ゼロへ。請求作業を最大50%削減',
+    product:'ほのぼのNEXT / ほのぼのmore',
+    productColor:'rgba(62,207,142,.15)',
+  },
+  {
+    id:'turnover', emoji:'😔', title:'スタッフが定着しない',
+    color:'#f5a623',
+    before:'業務負担が重く、新人が3ヶ月以内に辞めていく',
+    after:'記録・書類の負担を大幅に削減。現場の「しんどさ」が減ります',
+    product:'ほのぼのNEXT / Care Palette',
+    productColor:'rgba(245,166,35,.15)',
+  },
+  {
+    id:'info', emoji:'📡', title:'情報共有がうまくいかない',
+    color:'#7c5cfc',
+    before:'「言った・言わない」が多発。申し送りノートの転記も大変',
+    after:'リアルタイムで記録が共有。スタッフ全員が同じ情報を見られます',
+    product:'ほのぼのNEXT / ほのぼのVoice',
+    productColor:'rgba(124,92,252,.15)',
+  },
+  {
+    id:'night', emoji:'🌙', title:'夜間対応が不安',
+    color:'#38bdf8',
+    before:'夜勤スタッフが1〜2名。何かあったときが怖い',
+    after:'センサーが異変を自動検知してアラート。巡視回数を65%削減',
+    product:'ほのぼのIoTクラウド',
+    productColor:'rgba(56,189,248,.15)',
+  },
+  {
+    id:'document', emoji:'📂', title:'書類・計画書が多い',
+    color:'#fb923c',
+    before:'ケアプランや報告書の作成・印刷・郵送で時間が消える',
+    after:'データ連携で印刷・FAX不要。作成時間を55%削減できます',
+    product:'ケアプランデータ連携 / ほのぼのNEXT',
+    productColor:'rgba(251,146,60,.15)',
+  },
+  {
+    id:'overtime', emoji:'⏰', title:'残業がなかなか減らない',
+    color:'#f43f5e',
+    before:'業務量は増えるのに人手は足りない。終わらない仕事',
+    after:'記録・請求・書類を自動化。スタッフ1人あたり月10時間以上削減の実績',
+    product:'ほのぼのNEXT / ほのぼのmore',
+    productColor:'rgba(244,63,94,.15)',
+  },
+  {
+    id:'recruit', emoji:'🙋', title:'採用が難しい',
+    color:'#a78bfa',
+    before:'求人を出しても応募がこない。給料以外で差別化できない',
+    after:'「ICT化された職場」としてアピール。働きやすさが採用力になります',
+    product:'NDソフトウェア総合提案',
+    productColor:'rgba(167,139,250,.15)',
+  },
+];
+
+let selected = new Set();
+
+// ===== 画面初期化 =====
+function initIssueGrid() {
+  const grid = document.getElementById('issue-grid');
+  grid.innerHTML = ISSUES.map((iss,i) => `
+    <div class="issue-card" id="card-${iss.id}"
+         style="--card-color:${iss.color};animation:fadeUp .35s ${i*.05}s ease both;opacity:0"
+         onclick="toggleIssue('${iss.id}')">
+      <div class="ic-check">
+        <svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="ic-emoji">${iss.emoji}</span>
+      <div class="ic-title">${iss.title}</div>
+      <div class="ic-after">${iss.after.substring(0,28)}…</div>
+    </div>
+  `).join('');
+}
+
+function toggleIssue(id) {
+  if(selected.has(id)) {
+    selected.delete(id);
+    document.getElementById('card-'+id).classList.remove('selected');
+  } else {
+    selected.add(id);
+    document.getElementById('card-'+id).classList.add('selected');
+  }
+  updatePreview();
+}
+
+function updatePreview() {
+  const bar = document.getElementById('preview-bar');
+  const cnt = document.getElementById('sel-count');
+  cnt.textContent = selected.size;
+  bar.classList.toggle('has-selection', selected.size > 0);
+}
+
+// ===== カルテ生成 =====
+function buildKarte() {
+  const body = document.getElementById('karte-body');
+  const selIssues = ISSUES.filter(i => selected.has(i.id));
+
+  if(selIssues.length === 0) {
+    body.innerHTML = '<p style="color:var(--text2);padding:20px;font-size:14px">課題が選択されていません</p>';
+    return;
+  }
+
+  // タグ一覧
+  const tags = selIssues.map(i =>
+    `<span class="karte-tag" style="color:${i.color};border-color:${i.color};background:${i.productColor}">${i.emoji} ${i.title}</span>`
+  ).join('');
+
+  // カルテブロック
+  const blocks = selIssues.map(i => `
+    <div class="karte-block">
+      <div class="karte-block-header">
+        <span class="kb-emoji">${i.emoji}</span>
+        <span class="kb-title">${i.title}</span>
+        <span class="kb-product" style="background:${i.productColor};color:${i.color}">${i.product}</span>
+      </div>
+      <div class="karte-block-body">
+        <div class="kb-before">😓 今：${i.before}</div>
+        <div class="kb-arrow">導入後</div>
+        <div class="kb-after" style="background:${i.productColor};border-left:3px solid ${i.color}">
+          ✅ ${i.after}
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  body.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:10px">選択した課題</div>
+      <div class="karte-issues">${tags}</div>
+    </div>
+    <div style="font-size:11px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:12px">ビフォーアフター</div>
+    ${blocks}
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-top:8px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:.1em;text-transform:uppercase">担当スタッフより</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.8;font-weight:300">
+        選んでいただいた課題は、すべてNDソフトウェアの製品で対応できます。<br>
+        詳しい試算・事例・導入の流れについて、ブーススタッフがご説明します。
+      </div>
+    </div>
+  `;
+}
+
+// ===== 画面遷移 =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active','exit');
+  });
+  document.getElementById(id).classList.add('active');
+  document.getElementById('reset-btn').style.display = id === 's1' ? 'none' : 'block';
+}
+
+function goToS1() { showScreen('s1'); }
+
+function goToS2() {
+  initIssueGrid();
+  updatePreview();
+  showScreen('s2');
+  // 選択状態を復元
+  selected.forEach(id => {
+    const el = document.getElementById('card-'+id);
+    if(el) el.classList.add('selected');
+  });
+}
+
+function goToS3() {
+  if(selected.size === 0) return;
+  buildKarte();
+  showScreen('s3');
+  document.getElementById('s3-body') && document.getElementById('s3-body').scrollTo(0,0);
+}
+
+function resetApp() {
+  selected.clear();
+  document.getElementById('modal-email').value = '';
+  document.getElementById('modal-org').value = '';
+  document.getElementById('modal-form').style.display = 'block';
+  document.getElementById('modal-success').classList.remove('show');
+  closeModal();
+  showScreen('s1');
+}
+
+// ===== モーダル =====
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+function sendKarte() {
+  const email = document.getElementById('modal-email').value.trim();
+  if(!email || !email.includes('@')) {
+    document.getElementById('modal-email').style.borderColor = '#f43f5e';
+    setTimeout(() => document.getElementById('modal-email').style.borderColor = '', 1400);
+    return;
+  }
+  document.getElementById('modal-form').style.display = 'none';
+  document.getElementById('modal-success').classList.add('show');
+  setTimeout(() => {
+    closeModal();
+    resetApp();
+  }, 3500);
+}
+
+function printKarte() {
+  const selIssues = ISSUES.filter(i => selected.has(i.id));
+  if (selIssues.length === 0) return;
+  const today = new Date().toLocaleDateString('ja-JP', {year:'numeric',month:'long',day:'numeric'});
+
+  const tags = selIssues.map(i =>
+    '<span class="ps-tag" style="color:'+i.color+';border-color:'+i.color+';background:'+i.productColor+'">'+i.emoji+' '+i.title+'</span>'
+  ).join('');
+
+  const blocks = selIssues.map(i =>
+    '<div class="ps-block">'
+    + '<div class="ps-block-header">'
+    + '<span class="ps-block-emoji">'+i.emoji+'</span>'
+    + '<span class="ps-block-title">'+i.title+'</span>'
+    + '<span class="ps-block-product" style="background:'+i.productColor+';color:'+i.color+'">'+i.product+'</span>'
+    + '</div>'
+    + '<div class="ps-block-body">'
+    + '<div class="ps-before">😓 今の状況：'+i.before+'</div>'
+    + '<div class="ps-arrow">導入後</div>'
+    + '<div class="ps-after" style="border-color:'+i.color+';background:'+i.productColor+'">✅ '+i.after+'</div>'
+    + '</div>'
+    + '</div>'
+  ).join('');
+
+  const sheet = document.getElementById('pdf-sheet');
+  sheet.innerHTML =
+    '<button class="ps-close" onclick="closePrint()">✕</button>'
+    + '<div class="ps-wrap">'
+    + '<div class="ps-header">'
+    + '<div><div class="ps-logo">NDソフトウェア株式会社</div><div class="ps-logo-sub">ブース 課題カルテ</div></div>'
+    + '<div class="ps-date">'+today+'</div>'
+    + '</div>'
+    + '<div class="ps-title-bar">'
+    + '<div class="ps-karte-title">介護現場 課題カルテ</div>'
+    + '<div class="ps-karte-sub">'+selIssues.length+'件の課題について、ビフォーアフターをまとめました</div>'
+    + '</div>'
+    + '<div class="ps-section" style="padding-top:16px">'
+    + '<div class="ps-section-label">選択した課題</div>'
+    + '<div class="ps-tags">'+tags+'</div>'
+    + '</div>'
+    + '<div class="ps-section">'
+    + '<div class="ps-section-label">課題別ビフォーアフター</div>'
+    + blocks
+    + '</div>'
+    + '<div class="ps-staff-note">'
+    + '上記の課題はすべてNDソフトウェアの製品で対応できます。詳しい試算・事例・導入の流れについて、担当スタッフがご説明いたします。'
+    + '</div>'
+    + '<div class="ps-footer">'
+    + '<span>NDソフトウェア株式会社 / ND Software Co., Ltd.</span>'
+    + '<span>本資料は展示会ブースでの説明資料です</span>'
+    + '</div>'
+    + '</div>';
+
+  sheet.classList.add('open');
+  setTimeout(function() { window.print(); }, 300);
+}
+
+function closePrint() {
+  var sheet = document.getElementById('pdf-sheet');
+  sheet.classList.remove('open');
+  sheet.innerHTML = '';
+}
+
+function callStaff() {
+  alert('スタッフをお呼びします。\n少々お待ちください。');
+}
+
+// モーダル外タップで閉じる
+document.getElementById('modal').addEventListener('click', function(e) {
+  if(e.target === this) closeModal();
+});
+
+// パーティクル生成
+function createParticles() {
+  const s1 = document.getElementById('s1');
+  for(let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 4 + 2;
+    const colors = ['rgba(79,142,247,.4)','rgba(124,92,252,.3)','rgba(62,207,142,.25)'];
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;
+      bottom:${-size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*8+6}s;
+      animation-delay:${Math.random()*8}s;
+    `;
+    s1.appendChild(p);
+  }
+}
+createParticles();
+</script>
+</body>
+</html>
