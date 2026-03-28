@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>介護ソフト 比較チェックリスト</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f7f8fc;--surface:#fff;--surface2:#f0f4fa;--border:#e2e8f0;
+  --accent:#1a5c9a;--green:#16a34a;--red:#dc2626;--gold:#f59e0b;--orange:#d97706;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --sans:"Noto Sans JP",sans-serif;--display:"Zen Kaku Gothic New",sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);touch-action:manipulation}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;transform:translateY(14px)}
+.screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
+.topbar{background:var(--accent);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tb-title{font-family:var(--display);font-size:13px;font-weight:900}
+.tb-step{font-size:10px;letter-spacing:.08em;background:rgba(255,255,255,.18);padding:3px 10px;border-radius:100px}
+.page-header{padding:16px 20px 0;flex-shrink:0}
+.page-step{font-size:11px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin-bottom:5px;font-weight:600}
+.page-title{font-family:var(--display);font-size:clamp(16px,3.5vw,22px);font-weight:900;line-height:1.25;margin-bottom:3px}
+.page-desc{font-size:12px;color:var(--text2);font-weight:300}
+.scroll-body{flex:1;overflow-y:auto;padding:14px 20px 20px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.scroll-body::-webkit-scrollbar{width:3px}
+.scroll-body::-webkit-scrollbar-thumb{background:var(--border)}
+.page-footer{flex-shrink:0;padding:12px 20px 24px;background:linear-gradient(0deg,var(--bg) 60%,transparent)}
+.btn-go{width:100%;background:linear-gradient(135deg,var(--accent),#0ea5e9);color:#fff;border:none;border-radius:12px;font-family:var(--sans);font-size:15px;font-weight:700;padding:15px;cursor:pointer;box-shadow:0 4px 16px rgba(26,92,154,.2)}
+.btn-go:disabled{opacity:.35;cursor:not-allowed}
+.btn-go:not(:disabled):active{opacity:.85}
+.btn-gold{flex:1;background:linear-gradient(135deg,var(--gold),var(--orange));color:#fff;border:none;border-radius:12px;font-family:var(--sans);font-size:14px;font-weight:700;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-ghost{background:var(--surface);color:var(--text);border:1.5px solid var(--border);border-radius:12px;font-family:var(--sans);font-size:12px;font-weight:500;padding:14px 12px;cursor:pointer;white-space:nowrap}
+.btn-ghost:active{background:var(--surface2)}
+
+/* S1 */
+#s1{overflow:hidden}
+.s1-bg{position:absolute;inset:0;background:linear-gradient(155deg,#0f172a 0%,#1e3a5f 55%,#1a5c9a 100%)}
+.s1-inner{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:32px 28px;text-align:center}
+.s1-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:5px 16px;font-size:11px;color:rgba(255,255,255,.85);letter-spacing:.1em;margin-bottom:22px}
+.s1-h1{font-family:var(--display);font-size:clamp(24px,5vw,46px);font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.03em;margin-bottom:12px}
+.s1-h1 em{font-style:normal;color:#fbbf24;display:block}
+.s1-sub{font-size:13px;color:rgba(255,255,255,.7);line-height:1.85;margin-bottom:32px;font-weight:300;max-width:400px}
+.s1-cta{display:inline-flex;align-items:center;gap:10px;background:#fff;color:var(--accent);border:none;border-radius:100px;font-family:var(--sans);font-size:15px;font-weight:700;padding:16px 36px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .15s}
+.s1-cta:active{transform:scale(.97)}
+.s1-note{margin-top:13px;font-size:11px;color:rgba(255,255,255,.4)}
+.s1-rank{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap;justify-content:center}
+.s1-rank-pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:100px;padding:4px 12px;font-size:10px;color:rgba(255,255,255,.6)}
+
+/* S2 ソフト選択 */
+.soft-card{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:9px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px}
+.soft-card.on{border-color:var(--accent);background:rgba(26,92,154,.05)}
+.soft-rank{font-size:10px;font-weight:700;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;min-width:36px;text-align:center}
+.soft-card.on .soft-rank{background:var(--accent);color:#fff;border-color:var(--accent)}
+.soft-main{flex:1}
+.soft-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px}
+.soft-desc{font-size:11px;color:var(--text3);line-height:1.4}
+.soft-card.on .soft-name{color:var(--accent)}
+.soft-radio{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.soft-card.on .soft-radio{background:var(--accent);border-color:var(--accent)}
+.soft-note{font-size:11px;color:var(--text3);background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:12px;line-height:1.6}
+
+/* S3 チェックリスト */
+.cl-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;transition:border-color .2s}
+.cl-card.answered{border-color:#d4e4f7}
+.cl-num{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.cl-axis{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+.cl-question{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;line-height:1.5}
+.cl-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.cl-btn{border:1.5px solid var(--border);border-radius:9px;background:var(--surface);font-family:var(--sans);font-size:12px;font-weight:600;padding:10px 4px;cursor:pointer;transition:all .2s;color:var(--text2);text-align:center;line-height:1.3}
+.cl-btn.ok{border-color:var(--green);background:rgba(22,163,74,.08);color:var(--green)}
+.cl-btn.ng{border-color:var(--red);background:rgba(220,38,38,.08);color:var(--red)}
+.cl-btn.uk{border-color:var(--gold);background:rgba(245,158,11,.08);color:var(--gold)}
+.cl-progress{display:flex;align-items:center;gap:10px;margin:0 20px 12px;flex-shrink:0}
+.cl-bar-bg{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.cl-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+.cl-bar-txt{font-size:11px;color:var(--text3);white-space:nowrap}
+
+/* S4 結果 */
+#s4{overflow:hidden}
+.result-scroll{flex:1;overflow-y:auto;padding:14px 20px 14px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.result-scroll::-webkit-scrollbar{width:3px}
+.result-scroll::-webkit-scrollbar-thumb{background:var(--border)}
+/* スコアバナー */
+.score-banner{border-radius:14px;padding:18px 20px 16px;margin-bottom:14px;text-align:center}
+.sc-icon{font-size:36px;margin-bottom:8px}
+.sc-level{font-family:var(--display);font-size:19px;font-weight:900;margin-bottom:6px}
+.sc-nums{display:flex;align-items:baseline;justify-content:center;gap:4px;margin:8px 0}
+.sc-n{font-family:var(--display);font-size:52px;font-weight:900;line-height:1}
+.sc-d{font-size:14px;opacity:.7}
+.sc-msg{font-size:12px;line-height:1.8;opacity:.88;max-width:360px;margin:0 auto}
+/* 差分テーブル */
+.diff-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px}
+.diff-head{display:grid;grid-template-columns:1fr 68px 80px;gap:0;padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.diff-head-lbl{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase}
+.diff-head-cur{font-size:10px;font-weight:700;color:var(--text2);text-align:center}
+.diff-head-nd{font-size:10px;font-weight:700;color:var(--accent);text-align:center}
+.diff-row{display:grid;grid-template-columns:1fr 68px 80px;gap:0;padding:11px 14px;border-bottom:1px solid #f5f7fa;align-items:center}
+.diff-row:last-child{border-bottom:none}
+.diff-axis{font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px}
+.diff-cur{text-align:center}
+.diff-nd{text-align:center}
+.chip{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;display:inline-block;white-space:nowrap}
+.chip-ok{background:rgba(22,163,74,.1);color:var(--green)}
+.chip-ng{background:rgba(220,38,38,.1);color:var(--red)}
+.chip-uk{background:rgba(245,158,11,.1);color:var(--gold)}
+.chip-nd{background:rgba(26,92,154,.1);color:var(--accent)}
+/* NDポイント */
+.nd-box{background:rgba(26,92,154,.04);border:1px solid rgba(26,92,154,.15);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.nd-box-title{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.nd-point{font-size:12px;color:var(--text2);line-height:1.7;padding:6px 0;border-bottom:1px solid rgba(26,92,154,.08);display:flex;align-items:flex-start;gap:8px}
+.nd-point:last-child{border-bottom:none;padding-bottom:0}
+.nd-arrow{color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px}
+.result-note{font-size:11px;color:var(--text3);line-height:1.75;background:var(--surface2);border-radius:8px;padding:10px 13px;margin-bottom:12px}
+/* フッター */
+.s4-footer{flex-shrink:0;padding:10px 20px 22px;background:linear-gradient(0deg,var(--bg) 60%,transparent)}
+.s4-btns{display:flex;gap:8px}
+
+/* Modal */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+.modal-ov.open{display:flex}
+.modal{width:100%;background:var(--surface);border-radius:22px 22px 0 0;padding:24px 24px 42px;animation:slide-up .3s cubic-bezier(.34,1.2,.64,1)}
+@keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-family:var(--display);font-size:18px;font-weight:900;margin-bottom:5px}
+.modal-desc{font-size:13px;color:var(--text2);margin-bottom:16px;font-weight:300}
+.modal-inp{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);font-size:16px;color:var(--text);padding:13px 14px;margin-bottom:9px;transition:border-color .2s}
+.modal-inp:focus{outline:none;border-color:var(--accent)}
+.modal-inp::placeholder{color:var(--text3)}
+.modal-send{width:100%;background:linear-gradient(135deg,var(--gold),var(--orange));color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:15px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px}
+.modal-cancel{width:100%;background:none;border:none;font-family:var(--sans);font-size:13px;color:var(--text3);padding:8px;cursor:pointer}
+.modal-ok{display:none;text-align:center;padding:16px 0}
+.modal-ok.show{display:block}
+.mok-icon{font-size:44px;margin-bottom:10px}
+.mok-text{font-size:16px;font-weight:700;color:var(--green)}
+.mok-sub{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.7}
+
+/* PDF */
+@media print{body>*:not(#pdf-sheet){display:none!important}#pdf-sheet{display:block!important}@page{size:A4 portrait;margin:0}}
+#pdf-sheet{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);overflow-y:auto;padding:28px 16px 56px;font-family:"Noto Sans JP","Meiryo",sans-serif}
+#pdf-sheet.open{display:block}
+.ps-wrap{width:210mm;min-height:297mm;margin:0 auto;background:#fff;position:relative;padding:0 0 60px;box-shadow:0 4px 40px rgba(0,0,0,.4)}
+.ps-hd{background:#1a5c9a;color:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center}
+.ps-logo{font-size:13px;font-weight:700}.ps-s{font-size:10px;opacity:.7;margin-top:2px}.ps-date{font-size:10px;opacity:.6;text-align:right}
+.ps-tb{background:#eff6ff;border-bottom:4px solid #1a5c9a;padding:13px 22px 11px}
+.ps-mt{font-size:17px;font-weight:900;color:#0f172a}.ps-ms{font-size:11px;color:#475569;margin-top:3px}
+.ps-sec{padding:12px 22px 0}.ps-sec-l{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:8px}.ps-sec-l::after{content:"";flex:1;height:1px;background:#e2e8f0}
+.ps-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}
+.ps-tbl th{background:#1a5c9a;color:#fff;padding:7px 9px;text-align:left;font-weight:600;font-size:10px}
+.ps-tbl td{padding:7px 9px;border-bottom:1px solid #f0f0f0;color:#334155;vertical-align:top;line-height:1.5}
+.ps-tbl tr:nth-child(even) td{background:#f8fafc}
+.ps-nd{padding:8px 13px;background:#eff6ff;border-left:3px solid #1a5c9a;border-radius:0 5px 5px 0;font-size:10px;color:#1a5c9a;line-height:1.65;margin-bottom:6px}
+.ps-note{padding:8px 11px;background:#f8fafc;border-radius:4px;font-size:9px;color:#94a3b8;line-height:1.7}
+.ps-ft{position:absolute;bottom:0;left:0;right:0;background:#1a5c9a;color:#fff;padding:9px 22px;display:flex;justify-content:space-between;font-size:9px}
+.ps-close{position:fixed;top:14px;right:14px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center}
+@media print{.ps-close{display:none!important}}
+.reset-btn{position:fixed;top:12px;right:14px;z-index:300;background:rgba(255,255,255,.92);border:1px solid var(--border);color:var(--text2);border-radius:100px;font-family:var(--sans);font-size:11px;padding:5px 13px;cursor:pointer;display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<button class="reset-btn" id="reset-btn" onclick="resetApp()">← 最初から</button>
+<div id="pdf-sheet"></div>
+
+<!-- S1 アトラクト -->
+<section class="screen active" id="s1">
+  <div class="s1-bg"></div>
+  <div class="s1-inner">
+    <div class="s1-badge">📋 介護ソフト 比較チェックリスト</div>
+    <h1 class="s1-h1">今のソフト、<em>本当に満足してる？</em></h1>
+    <p class="s1-sub">6つの軸で現在使っているソフトを評価。乗り換えを検討すべきか、3分でわかります。</p>
+    <button class="s1-cta" onclick="showScreen('s2')">チェックを始める
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <p class="s1-note">無料・約3分・結果PDFで持ち帰れます</p>
+    <div class="s1-rank">
+      <div class="s1-rank-pill">1位 ほのぼのNEXT 29.5%</div>
+      <div class="s1-rank-pill">2位 ワイズマン 11.5%</div>
+      <div class="s1-rank-pill">3位 カイポケ 9.6%</div>
+    </div>
+  </div>
+</section>
+
+<!-- S2 ソフト選択 -->
+<section class="screen" id="s2">
+  <div class="topbar"><div style="display:flex;align-items:center;gap:8px"><span>📋</span><span class="tb-title">介護ソフト比較チェックリスト</span></div><span class="tb-step">STEP 1 / 2</span></div>
+  <div class="page-header">
+    <div class="page-step">Step 1 — 現在のソフト</div>
+    <div class="page-title">今使っている介護ソフトは？</div>
+    <div class="page-desc">利用者数ランキング（2026年3月 アスピック調べ）をもとに選択肢を用意しました</div>
+  </div>
+  <div class="scroll-body">
+    <div class="soft-note">📊 介護ソフト利用者数ランキング（2026年3月調査）をもとに作成。最も近いものを選んでください。</div>
+    <div class="soft-card" onclick="pickSoft('honobono',this)">
+      <div class="soft-rank">1位</div>
+      <div class="soft-main"><div class="soft-name">ほのぼのNEXT</div><div class="soft-desc">NDソフトウェア / 72,600事業所 / 業界トップシェア</div></div>
+      <div class="soft-radio"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="3" fill="#fff"/></svg></div>
+    </div>
+    <div class="soft-card" onclick="pickSoft('wiseman',this)">
+      <div class="soft-rank">2位</div>
+      <div class="soft-main"><div class="soft-name">ワイズマンシステムSP</div><div class="soft-desc">株式会社ワイズマン / 61,200事業所</div></div>
+      <div class="soft-radio"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="3" fill="#fff"/></svg></div>
+    </div>
+    <div class="soft-card" onclick="pickSoft('kaipoke',this)">
+      <div class="soft-rank">3位</div>
+      <div class="soft-main"><div class="soft-name">カイポケ</div><div class="soft-desc">株式会社エス・エム・エス / 50,000事業所</div></div>
+      <div class="soft-radio"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="3" fill="#fff"/></svg></div>
+    </div>
+    <div class="soft-card" onclick="pickSoft('kanamic',this)">
+      <div class="soft-rank">4位</div>
+      <div class="soft-main"><div class="soft-name">カナミック</div><div class="soft-desc">株式会社カナミックネットワーク / 地域包括ケア向け</div></div>
+      <div class="soft-radio"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="3" fill="#fff"/></svg></div>
+    </div>
+    <div class="soft-card" onclick="pickSoft('carekarte',this)">
+      <div class="soft-rank">5位</div>
+      <div class="soft-main"><div class="soft-name">ケアカルテ</div><div class="soft-desc">株式会社ケアコネクトジャパン / ICT連携に強み</div></div>
+      <div class="soft-radio"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="3" fill="#fff"/></svg></div>
+    </div>
+    <div class="soft-card" onclick="pickSoft('other',this)">
+      <div class="soft-rank" style="font-size:9px">その他</div>
+      <div class="soft-main"><div class="soft-name">その他の介護ソフト</div><div class="soft-desc">上記以外のソフトをご利用中</div></div>
+      <div class="soft-radio"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="3" fill="#fff"/></svg></div>
+    </div>
+    <div class="soft-card" onclick="pickSoft('paper',this)">
+      <div class="soft-rank" style="font-size:9px">未導入</div>
+      <div class="soft-main"><div class="soft-name">紙・Excelで管理している</div><div class="soft-desc">介護ソフト未導入</div></div>
+      <div class="soft-radio"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="3" fill="#fff"/></svg></div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <button class="btn-go" id="s2-next" onclick="goToChecklist()" disabled>次へ：6軸チェックリスト →</button>
+  </div>
+</section>
+
+<!-- S3 チェックリスト -->
+<section class="screen" id="s3">
+  <div class="topbar"><div style="display:flex;align-items:center;gap:8px"><span>📋</span><span class="tb-title">介護ソフト比較チェックリスト</span></div><span class="tb-step">STEP 2 / 2</span></div>
+  <div class="page-header">
+    <div class="page-step">Step 2 — 6軸評価</div>
+    <div class="page-title">今のソフトを正直に評価してください</div>
+    <div class="page-desc">6つの軸それぞれを「満足」「不満」「わからない」で回答</div>
+  </div>
+  <div class="cl-progress">
+    <div class="cl-bar-bg"><div class="cl-bar-fill" id="cl-bar" style="width:0%"></div></div>
+    <div class="cl-bar-txt" id="cl-txt">0 / 6</div>
+  </div>
+  <div class="scroll-body" id="cl-body"></div>
+  <div class="page-footer">
+    <button class="btn-go" id="s3-next" onclick="buildResult()" disabled>結果を見る →</button>
+  </div>
+</section>
+
+<!-- S4 結果 -->
+<section class="screen" id="s4">
+  <div class="topbar"><div style="display:flex;align-items:center;gap:8px"><span>📋</span><span class="tb-title">介護ソフト比較チェックリスト</span></div><span class="tb-step">結果</span></div>
+  <div class="result-scroll" id="result-body"></div>
+  <div class="s4-footer">
+    <div class="s4-btns">
+      <button class="btn-gold" onclick="openModal()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 4h12v9a1 1 0 01-1 1H3a1 1 0 01-1-1V4zm4 0V3a1 1 0 011-1h2a1 1 0 011 1v1" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>
+        結果をメールで受け取る
+      </button>
+      <button class="btn-ghost" onclick="printResult()">PDF</button>
+      <button class="btn-ghost" onclick="callStaff()">スタッフを呼ぶ</button>
+    </div>
+  </div>
+</section>
+
+<!-- Modal -->
+<div class="modal-ov" id="modal">
+  <div class="modal">
+    <div id="modal-form">
+      <div class="modal-title">比較結果をお送りします</div>
+      <div class="modal-desc">メールアドレスを入力するだけ。担当者からご案内もします。</div>
+      <input class="modal-inp" type="email" id="modal-email" placeholder="メールアドレス">
+      <input class="modal-inp" type="text" id="modal-org" placeholder="法人名・施設名（任意）">
+      <button class="modal-send" onclick="sendResult()">結果を受け取る</button>
+      <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
+    </div>
+    <div class="modal-ok" id="modal-ok">
+      <div class="mok-icon">✅</div>
+      <div class="mok-text">送信しました！</div>
+      <div class="mok-sub">比較結果と担当者からのご案内をお送りします。</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 状態 =====
+var currentSoft = null;
+var answers = {};
+
+// ===== ソフト名称 =====
+var SOFT_NAMES = {
+  honobono: 'ほのぼのNEXT',
+  wiseman:  'ワイズマンSP',
+  kaipoke:  'カイポケ',
+  kanamic:  'カナミック',
+  carekarte:'ケアカルテ',
+  other:    '現在のソフト',
+  paper:    '紙・Excel管理'
+};
+
+// ===== 6軸マスター =====
+var AXES = [
+  {
+    id: 'rec',
+    icon: '📝',
+    label: '記録・情報共有',
+    question: '記録入力・申し送り・スタッフ間の情報共有がスムーズにできていますか？',
+    ndStrength: '音声入力（ほのぼのVoice）でケア中に記録完了。申し送りを自動生成し転記ゼロ。記録時間を最大65%削減した実績。',
+    ngNote: '記録業務の非効率は離職の主因です。音声入力・自動申し送りで月10〜15時間/人の削減が可能です。',
+  },
+  {
+    id: 'bill',
+    icon: '🧾',
+    label: '請求・レセプト',
+    question: '請求ミスや返戻が少なく、月末の請求作業がスムーズに進んでいますか？',
+    ndStrength: '提出前の自動エラーチェックで返戻率を大幅削減。月末作業を最大50%短縮。国保連伝送もワンクリック対応。',
+    ngNote: '返戻1件の対応コストは数時間。自動点検機能で根本解決できます。',
+  },
+  {
+    id: 'life',
+    icon: '📊',
+    label: 'LIFE連携・加算対応',
+    question: 'LIFEへのデータ提出や生産性向上推進体制加算などの加算取得に対応していますか？',
+    ndStrength: '新LIFE完全対応済み。科学的介護推進体制加算・生産性向上推進体制加算の取得を標準機能でサポート。',
+    ngNote: 'LIFE未対応・加算未取得では年間数十万〜数百万円の収益機会を逃している可能性があります。',
+  },
+  {
+    id: 'support',
+    icon: '🛎️',
+    label: '導入・サポート体制',
+    question: 'トラブル時のサポートが迅速・丁寧で、法改正時の対応も安心できますか？',
+    ndStrength: '全国の専任担当者が対応。導入研修・定期訪問・電話サポート体制。毎年の法改正にも自動アップデートで対応。',
+    ngNote: 'サポート不足は現場定着を妨げ、法改正対応ミスは返戻・査定リスクに直結します。',
+  },
+  {
+    id: 'cost',
+    icon: '💰',
+    label: '価格・コスト',
+    question: '費用対効果に満足しており、補助金申請のサポートも受けられていますか？',
+    ndStrength: 'IT導入補助金・介護テクノロジー補助金の申請実績多数。補助金活用で導入コストを75〜80%削減したケースも。',
+    ngNote: '補助金を活用すれば導入コストを大幅に抑えられます。ご相談ください。',
+  },
+  {
+    id: 'mobile',
+    icon: '📱',
+    label: 'スマホ・タブレット対応',
+    question: 'スマートフォンやタブレットで現場からスムーズに記録・確認できますか？',
+    ndStrength: 'スマホ・タブレット完全対応。ハンズフリーのネックスピーカー入力にも対応。現場のどこからでもリアルタイム記録。',
+    ngNote: '現場入力できない環境では、事務所への移動・転記が発生し残業の原因になります。',
+  },
+];
+
+// ===== 画面遷移 =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) {
+    s.classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  document.getElementById('reset-btn').style.display = id === 's1' ? 'none' : 'block';
+}
+
+// ===== S2 =====
+function pickSoft(id, el) {
+  currentSoft = id;
+  document.querySelectorAll('.soft-card').forEach(function(c) { c.classList.remove('on'); });
+  el.classList.add('on');
+  document.getElementById('s2-next').disabled = false;
+}
+
+function goToChecklist() {
+  answers = {};
+  buildChecklist();
+  showScreen('s3');
+}
+
+// ===== S3 =====
+function buildChecklist() {
+  var softName = SOFT_NAMES[currentSoft] || '現在のソフト';
+  var isPaper = (currentSoft === 'paper');
+  var html = '';
+  AXES.forEach(function(ax, i) {
+    var ans = answers[ax.id] || '';
+    html += '<div class="cl-card' + (ans ? ' answered' : '') + '" id="cc-' + ax.id + '" style="animation:fadeUp .3s ' + (i * 0.06) + 's ease both;opacity:0">'
+      + '<div class="cl-num">'
+      + '<span>' + (i + 1) + ' / 6</span>'
+      + '<span class="cl-axis">' + ax.icon + ' ' + ax.label + '</span>'
+      + '</div>'
+      + '<div class="cl-question">' + (isPaper ? '紙・Excelでは' : softName + 'は') + '…<br>' + ax.question + '</div>'
+      + '<div class="cl-btns">'
+      + '<button class="cl-btn' + (ans === 'ok' ? ' ok' : '') + '" onclick="setAns(&quot;' + ax.id + '&quot;,&quot;ok&quot;,this)">✓ 満足</button>'
+      + '<button class="cl-btn' + (ans === 'ng' ? ' ng' : '') + '" onclick="setAns(&quot;' + ax.id + '&quot;,&quot;ng&quot;,this)">✗ 不満</button>'
+      + '<button class="cl-btn' + (ans === 'uk' ? ' uk' : '') + '" onclick="setAns(&quot;' + ax.id + '&quot;,&quot;uk&quot;,this)">? わからない</button>'
+      + '</div>'
+      + '</div>';
+  });
+  document.getElementById('cl-body').innerHTML = html;
+  updateProgress();
+}
+
+function setAns(axisId, val, btn) {
+  answers[axisId] = val;
+  var card = document.getElementById('cc-' + axisId);
+  card.querySelectorAll('.cl-btn').forEach(function(b) {
+    b.classList.remove('ok', 'ng', 'uk');
+  });
+  btn.classList.add(val);
+  card.classList.add('answered');
+  updateProgress();
+}
+
+function updateProgress() {
+  var done = Object.keys(answers).length;
+  var total = AXES.length;
+  document.getElementById('cl-bar').style.width = Math.round(done / total * 100) + '%';
+  document.getElementById('cl-txt').textContent = done + ' / ' + total;
+  document.getElementById('s3-next').disabled = (done < total);
+}
+
+// ===== S4 結果生成 =====
+function buildResult() {
+  var softName = SOFT_NAMES[currentSoft] || '現在のソフト';
+  var isPaper = (currentSoft === 'paper');
+
+  var ngCount = 0;
+  var ukCount = 0;
+  AXES.forEach(function(ax) {
+    if (answers[ax.id] === 'ng') ngCount++;
+    if (answers[ax.id] === 'uk') ukCount++;
+  });
+
+  // 判定
+  var icon, level, color, bg, msg;
+  if (isPaper) {
+    icon = '🆘'; level = '今すぐ介護ソフト導入を検討する段階です';
+    color = var_red(); bg = 'rgba(220,38,38,.07)';
+    msg = '紙・Excelでの管理は記録業務の非効率・請求ミス・BCP脆弱性など多くのリスクを抱えています。介護テクノロジー補助金を活用すれば、導入コストを大幅に抑えることができます。';
+  } else if (ngCount >= 4) {
+    icon = '🔴'; level = '乗り換えを強くお勧めします';
+    color = var_red(); bg = 'rgba(220,38,38,.07)';
+    msg = '6軸中' + ngCount + '軸で不満が出ています。現在のソフトへの不満が積み重なり、現場スタッフの負担・離職リスクにも影響しています。今すぐほのぼのNEXTとの比較をご検討ください。';
+  } else if (ngCount >= 2) {
+    icon = '🟡'; level = '比較検討を始めるタイミングです';
+    color = '#d97706'; bg = 'rgba(217,119,6,.07)';
+    msg = '6軸中' + ngCount + '軸で不満があります。改善できる部分が複数あります。ほのぼのNEXTへの移行で解消できる課題をご確認ください。';
+  } else if (ngCount >= 1 || ukCount >= 2) {
+    icon = '📋'; level = '一部に改善の余地があります';
+    color = '#0f766e'; bg = 'rgba(15,118,110,.07)';
+    msg = '大きな不満は少ない状況ですが、' + (ngCount + ukCount) + '軸で確認すべき点があります。ほのぼのNEXTでどう改善できるかをご覧ください。';
+  } else {
+    icon = '✅'; level = '概ね良好です';
+    color = '#16a34a'; bg = 'rgba(22,163,74,.07)';
+    msg = '6軸すべてで満足されています。ほのぼのNEXTへの移行でさらなる業務効率化・加算取得が期待できます。';
+  }
+
+  // スコアバナー
+  var html = '<div class="score-banner" style="background:' + bg + ';border:1px solid ' + color + '30">'
+    + '<div class="sc-icon">' + icon + '</div>'
+    + '<div class="sc-level" style="color:' + color + '">' + level + '</div>'
+    + '<div class="sc-nums"><span class="sc-n" style="color:' + color + '">' + ngCount + '</span><span class="sc-d" style="color:' + color + '"> / 6軸で不満</span></div>'
+    + '<div class="sc-msg" style="color:' + color + '">' + msg + '</div>'
+    + '</div>';
+
+  // 差分テーブル
+  html += '<div class="diff-section">'
+    + '<div class="diff-head">'
+    + '<div class="diff-head-lbl">評価軸</div>'
+    + '<div class="diff-head-cur">' + softName + '</div>'
+    + '<div class="diff-head-nd">ほのぼのNEXT</div>'
+    + '</div>';
+
+  AXES.forEach(function(ax) {
+    var ans = answers[ax.id];
+    var curLabel = {ok:'満足', ng:'不満', uk:'?'}[ans] || '';
+    var curClass = {ok:'chip-ok', ng:'chip-ng', uk:'chip-uk'}[ans] || '';
+    html += '<div class="diff-row">'
+      + '<div class="diff-axis">' + ax.icon + ' ' + ax.label + '</div>'
+      + '<div class="diff-cur"><span class="chip ' + curClass + '">' + curLabel + '</span></div>'
+      + '<div class="diff-nd"><span class="chip chip-nd">✓ 対応</span></div>'
+      + '</div>';
+  });
+  html += '</div>';
+
+  // NG・UKのNDポイント
+  var ngAxes = AXES.filter(function(ax) { return answers[ax.id] === 'ng' || answers[ax.id] === 'uk'; });
+  if (ngAxes.length > 0) {
+    html += '<div class="nd-box">'
+      + '<div class="nd-box-title">📌 ほのぼのNEXTで改善できること</div>';
+    ngAxes.forEach(function(ax) {
+      html += '<div class="nd-point">'
+        + '<span class="nd-arrow">→</span>'
+        + '<span>' + ax.icon + ' <strong>' + ax.label + '：</strong>' + ax.ndStrength + '</span>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  html += '<div class="result-note">※本比較はご入力の評価をもとにした参考情報です。詳細な機能比較・デモンストレーションはブーススタッフまでお気軽にご相談ください。</div>';
+
+  document.getElementById('result-body').innerHTML = html;
+  showScreen('s4');
+}
+
+function var_red() { return '#dc2626'; }
+
+// ===== PDF =====
+function printResult() {
+  var today = new Date().toLocaleDateString('ja-JP', {year:'numeric', month:'long', day:'numeric'});
+  var softName = SOFT_NAMES[currentSoft] || '現在のソフト';
+  var ngCount = AXES.filter(function(ax) { return answers[ax.id] === 'ng'; }).length;
+  var ansLabels = {ok:'満足', ng:'不満', uk:'不明'};
+
+  var tRows = AXES.map(function(ax) {
+    var ans = answers[ax.id] || '';
+    return '<tr><td>' + ax.icon + ' ' + ax.label + '</td>'
+      + '<td>' + (ansLabels[ans] || '') + '</td>'
+      + '<td>✓ 対応</td>'
+      + '<td style="font-size:10px;color:#475569">' + ax.ndStrength + '</td></tr>';
+  }).join('');
+
+  var ndNotes = AXES.filter(function(ax) {
+    return answers[ax.id] === 'ng';
+  }).map(function(ax) {
+    return '<div class="ps-nd">' + ax.icon + ' <strong>' + ax.label + '：</strong>' + ax.ngNote + '</div>';
+  }).join('');
+
+  var sheet = document.getElementById('pdf-sheet');
+  sheet.innerHTML = '<button class="ps-close" onclick="closePrint()">✕</button>'
+    + '<div class="ps-wrap">'
+    + '<div class="ps-hd"><div><div class="ps-logo">NDソフトウェア株式会社</div><div class="ps-s">介護ソフト比較チェックリスト 結果</div></div><div class="ps-date">' + today + '</div></div>'
+    + '<div class="ps-tb"><div class="ps-mt">介護ソフト比較チェックリスト 結果</div><div class="ps-ms">現在使用：' + softName + ' ／ 不満項目：' + ngCount + ' / 6軸</div></div>'
+    + '<div class="ps-sec"><div class="ps-sec-l">6軸 比較表</div>'
+    + '<table class="ps-tbl"><thead><tr><th>評価軸</th><th>' + softName + '</th><th>ほのぼのNEXT</th><th>ほのぼのNEXTの強み</th></tr></thead><tbody>' + tRows + '</tbody></table>'
+    + '</div>'
+    + (ndNotes ? '<div class="ps-sec"><div class="ps-sec-l">改善ポイント</div>' + ndNotes + '</div>' : '')
+    + '<div class="ps-sec" style="padding-top:8px"><div class="ps-note">※本比較はご入力の評価をもとにした参考情報です。詳細な機能比較・デモはブーススタッフまでお気軽にご相談ください。</div></div>'
+    + '<div class="ps-ft"><span>NDソフトウェア株式会社 / ND Software Co., Ltd.</span><span>詳細はブーススタッフまで</span></div>'
+    + '</div>';
+  sheet.classList.add('open');
+  setTimeout(function() { window.print(); }, 300);
+}
+function closePrint() {
+  var s = document.getElementById('pdf-sheet');
+  s.classList.remove('open');
+  s.innerHTML = '';
+}
+
+// ===== Modal =====
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function sendResult() {
+  var email = document.getElementById('modal-email').value.trim();
+  if (!email || !email.includes('@')) {
+    document.getElementById('modal-email').style.borderColor = '#ef4444';
+    setTimeout(function() { document.getElementById('modal-email').style.borderColor = ''; }, 1400);
+    return;
+  }
+  document.getElementById('modal-form').style.display = 'none';
+  document.getElementById('modal-ok').classList.add('show');
+  setTimeout(function() { closeModal(); resetApp(); }, 3500);
+}
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+function callStaff() { alert('スタッフをお呼びします。\n少々お待ちください。'); }
+
+// ===== Reset =====
+function resetApp() {
+  currentSoft = null;
+  answers = {};
+  document.querySelectorAll('.soft-card').forEach(function(c) { c.classList.remove('on'); });
+  document.getElementById('s2-next').disabled = true;
+  document.getElementById('s3-next').disabled = true;
+  document.getElementById('cl-body').innerHTML = '';
+  document.getElementById('cl-bar').style.width = '0%';
+  document.getElementById('cl-txt').textContent = '0 / 6';
+  document.getElementById('modal-email').value = '';
+  document.getElementById('modal-org').value = '';
+  document.getElementById('modal-form').style.display = 'block';
+  document.getElementById('modal-ok').classList.remove('show');
+  closeModal();
+  closePrint();
+  showScreen('s1');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>補助金チェッカー｜介護・福祉事業所向け</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f5f7fa;
+  --surface:#ffffff;
+  --surface2:#f0f3f8;
+  --border:#e2e8f0;
+  --accent:#1a5c9a;
+  --accent2:#0ea5e9;
+  --gold:#f59e0b;
+  --green:#10b981;
+  --purple:#7c3aed;
+  --red:#ef4444;
+  --text:#0f172a;
+  --text2:#475569;
+  --text3:#94a3b8;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Zen Kaku Gothic New',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);touch-action:manipulation}
+
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s ease;transform:translateY(16px)}
+.screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
+
+/* TOP BAR */
+.topbar{
+  background:var(--accent);color:#fff;
+  padding:14px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.tb-logo{font-family:var(--display);font-size:14px;font-weight:900;letter-spacing:.02em}
+.tb-sub{font-size:10px;opacity:.7;margin-top:1px}
+.tb-step{
+  font-size:11px;letter-spacing:.1em;
+  background:rgba(255,255,255,.15);
+  padding:4px 12px;border-radius:100px;
+}
+
+/* ===== S1: ATTRACT ===== */
+#s1{background:linear-gradient(160deg,#0f2d5c 0%,#1a5c9a 50%,#0ea5e9 100%)}
+.s1-inner{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 32px;text-align:center}
+.s1-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+  border-radius:100px;padding:6px 18px;
+  font-size:11px;color:rgba(255,255,255,.85);letter-spacing:.12em;
+  margin-bottom:28px;
+}
+.s1-badge::before{content:'💰';font-size:14px}
+.s1-h1{
+  font-family:var(--display);
+  font-size:clamp(28px,6vw,52px);
+  font-weight:900;color:#fff;
+  line-height:1.15;letter-spacing:-.02em;
+  margin-bottom:16px;
+}
+.s1-h1 span{
+  background:linear-gradient(90deg,#fde68a,#fbbf24);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.s1-sub{font-size:15px;color:rgba(255,255,255,.75);line-height:1.8;margin-bottom:40px;font-weight:300;max-width:420px}
+.s1-cta{
+  background:linear-gradient(135deg,#f59e0b,#d97706);
+  color:#fff;border:none;border-radius:100px;
+  font-family:var(--sans);font-size:16px;font-weight:700;
+  padding:18px 44px;cursor:pointer;
+  box-shadow:0 8px 24px rgba(245,158,11,.4);
+  transition:all .2s;letter-spacing:.02em;
+  display:inline-flex;align-items:center;gap:10px;
+}
+.s1-cta:active{transform:scale(.97)}
+.s1-note{margin-top:18px;font-size:12px;color:rgba(255,255,255,.45);letter-spacing:.06em}
+.s1-cards{
+  display:flex;gap:10px;margin-top:36px;flex-wrap:wrap;justify-content:center;
+}
+.s1-mini{
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+  border-radius:10px;padding:8px 14px;font-size:11px;color:rgba(255,255,255,.7);
+  display:flex;align-items:center;gap:6px;
+}
+.s1-mini-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* ===== S2: ATTR SELECT ===== */
+#s2{background:var(--bg);overflow:hidden}
+.page-header{padding:20px 24px 0;flex-shrink:0}
+.page-step{font-size:11px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin-bottom:8px;font-weight:500}
+.page-title{font-family:var(--display);font-size:clamp(18px,3.5vw,26px);font-weight:900;line-height:1.25;margin-bottom:4px}
+.page-desc{font-size:13px;color:var(--text2);font-weight:300}
+
+.scroll-area{flex:1;overflow-y:auto;padding:16px 24px 100px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.scroll-area::-webkit-scrollbar{width:3px}
+.scroll-area::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* 施設種別 */
+.attr-group{margin-bottom:22px}
+.attr-label{font-size:11px;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;margin-bottom:10px;font-weight:500}
+.attr-row{display:flex;gap:10px;flex-wrap:wrap}
+.attr-btn{
+  flex:1;min-width:120px;
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:12px;padding:14px 12px;
+  cursor:pointer;text-align:center;transition:all .2s;
+  font-family:var(--sans);
+}
+.attr-btn.selected{border-color:var(--accent);background:rgba(26,92,154,.06)}
+.attr-btn-icon{font-size:22px;margin-bottom:6px;display:block}
+.attr-btn-text{font-size:13px;font-weight:600;color:var(--text)}
+.attr-btn-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.attr-btn.selected .attr-btn-text{color:var(--accent)}
+
+/* 取り組み選択 */
+.check-group{margin-bottom:16px}
+.check-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.check-card{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:10px;padding:12px 12px;
+  cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:10px;
+  user-select:none;
+}
+.check-card.selected{border-color:var(--gold);background:rgba(245,158,11,.06)}
+.cc-icon{font-size:18px;flex-shrink:0}
+.cc-text{font-size:12px;font-weight:500;color:var(--text);line-height:1.3}
+.cc-check{
+  width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);
+  flex-shrink:0;margin-left:auto;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.check-card.selected .cc-check{background:var(--gold);border-color:var(--gold)}
+
+/* 固定フッター */
+.sticky-footer{
+  position:fixed;bottom:0;left:0;right:0;
+  padding:12px 24px 24px;
+  background:linear-gradient(0deg,var(--bg) 60%,transparent);
+  pointer-events:none;
+}
+.sticky-footer.ready{pointer-events:all}
+.sfooter-btn{
+  width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:12px;
+  font-family:var(--sans);font-size:15px;font-weight:700;
+  padding:15px;cursor:pointer;
+  opacity:0;transform:translateY(8px);
+  transition:all .3s cubic-bezier(.34,1.2,.64,1);
+}
+.sticky-footer.ready .sfooter-btn{opacity:1;transform:translateY(0)}
+.sfooter-btn:active{opacity:.85}
+
+/* ===== S3: RESULT ===== */
+#s3{background:var(--bg);overflow:hidden}
+.result-scroll{flex:1;overflow-y:auto;padding:16px 24px 160px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.result-scroll::-webkit-scrollbar{width:3px}
+.result-scroll::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* サマリーバナー */
+.summary-banner{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:16px;padding:18px 20px;margin-bottom:18px;
+  display:flex;align-items:center;gap:16px;color:#fff;
+}
+.sb-icon{font-size:32px;flex-shrink:0}
+.sb-count{font-family:var(--display);font-size:36px;font-weight:900;line-height:1}
+.sb-unit{font-size:12px;opacity:.8;margin-top:2px}
+.sb-text{font-size:13px;opacity:.85;line-height:1.6}
+
+/* 補助金カード */
+.subsidy-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;margin-bottom:12px;
+}
+.sc-header{
+  padding:14px 16px;display:flex;align-items:flex-start;gap:12px;
+  border-bottom:1px solid var(--border);
+}
+.sc-badge{
+  flex-shrink:0;width:32px;height:32px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+.sc-header-main{flex:1}
+.sc-category{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.sc-name{font-size:14px;font-weight:700;color:var(--text);line-height:1.3}
+.sc-priority{
+  flex-shrink:0;font-size:10px;font-weight:700;letter-spacing:.04em;
+  padding:3px 8px;border-radius:100px;
+}
+.sc-body{padding:14px 16px}
+.sc-amount{
+  display:flex;align-items:baseline;gap:6px;margin-bottom:10px;
+}
+.sc-amount-num{font-family:var(--display);font-size:22px;font-weight:900}
+.sc-amount-unit{font-size:11px;color:var(--text2)}
+.sc-desc{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px}
+.sc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.sc-tag{font-size:10px;padding:3px 9px;border-radius:100px;background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.sc-nd-note{
+  background:rgba(26,92,154,.06);border-left:3px solid var(--accent);
+  border-radius:0 6px 6px 0;padding:8px 12px;
+  font-size:11px;color:var(--accent);line-height:1.6;font-weight:500;
+}
+
+/* 注意書き */
+.caution-box{
+  background:#fffbeb;border:1px solid #fde68a;border-radius:10px;
+  padding:12px 14px;margin-bottom:12px;
+  font-size:11px;color:#92400e;line-height:1.7;
+}
+.caution-box strong{font-weight:700}
+
+/* 結果フッター */
+.result-footer{
+  position:fixed;bottom:0;left:0;right:0;
+  padding:12px 24px 24px;
+  background:linear-gradient(0deg,var(--bg) 60%,transparent);
+}
+.rf-row{display:flex;gap:8px}
+.rf-main{
+  flex:1;background:linear-gradient(135deg,var(--gold),#d97706);
+  color:#fff;border:none;border-radius:12px;
+  font-family:var(--sans);font-size:14px;font-weight:700;
+  padding:14px;cursor:pointer;transition:opacity .2s;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.rf-main:active{opacity:.85}
+.rf-sub{
+  background:var(--surface);color:var(--text);border:1.5px solid var(--border);
+  border-radius:12px;font-family:var(--sans);font-size:13px;font-weight:500;
+  padding:14px 16px;cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.rf-sub:active{background:var(--surface2)}
+
+/* ===== MODAL ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{width:100%;background:var(--surface);border-radius:22px 22px 0 0;padding:26px 26px 44px;animation:slide-up .3s cubic-bezier(.34,1.2,.64,1)}
+@keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-family:var(--display);font-size:18px;font-weight:900;margin-bottom:6px}
+.modal-desc{font-size:13px;color:var(--text2);margin-bottom:18px;font-weight:300}
+.modal-inp{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);font-size:16px;color:var(--text);padding:13px 15px;margin-bottom:10px;transition:border-color .2s}
+.modal-inp:focus{outline:none;border-color:var(--accent)}
+.modal-inp::placeholder{color:var(--text3)}
+.modal-send{width:100%;background:linear-gradient(135deg,var(--gold),#d97706);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:15px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px}
+.modal-cancel{width:100%;background:none;border:none;font-family:var(--sans);font-size:13px;color:var(--text3);padding:8px;cursor:pointer}
+.modal-success{display:none;text-align:center;padding:16px 0}
+.modal-success.show{display:block}
+.modal-ok-icon{font-size:44px;margin-bottom:10px}
+.modal-ok-text{font-size:16px;font-weight:700;color:var(--green)}
+.modal-ok-sub{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.7}
+
+/* PDF */
+@media print{body>*:not(#pdf-sheet){display:none!important}#pdf-sheet{display:block!important}@page{size:A4 portrait;margin:0}}
+#pdf-sheet{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);overflow-y:auto;overflow-x:hidden;padding:28px 16px 56px;box-sizing:border-box;font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN','Meiryo',sans-serif}
+#pdf-sheet.open{display:block}
+.ps-wrap{width:210mm;min-height:297mm;margin:0 auto;background:#fff;position:relative;padding:0 0 60px;box-shadow:0 4px 40px rgba(0,0,0,.4);border-radius:4px}
+.ps-header{background:#1a5c9a;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.ps-logo-main{font-size:14px;font-weight:700}
+.ps-logo-sub{font-size:10px;opacity:.7;margin-top:2px}
+.ps-date{font-size:10px;opacity:.65;text-align:right}
+.ps-title-bar{background:#f0f6ff;border-bottom:4px solid #1a5c9a;padding:18px 24px 14px}
+.ps-karte-title{font-size:20px;font-weight:900;color:#0f172a;letter-spacing:-.02em}
+.ps-karte-sub{font-size:12px;color:#475569;margin-top:4px}
+.ps-section{padding:14px 24px 0}
+.ps-section-label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.ps-section-label::after{content:'';flex:1;height:1px;background:#e2e8f0}
+.ps-subsidy{border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:10px}
+.ps-subsidy-head{background:#f8fafc;padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0}
+.ps-subsidy-name{font-size:13px;font-weight:700;flex:1;color:#0f172a}
+.ps-subsidy-amount{font-size:12px;font-weight:700}
+.ps-subsidy-body{padding:10px 14px;font-size:11px;color:#475569;line-height:1.7}
+.ps-nd-note{margin:6px 0 0;padding:6px 10px;background:#eff6ff;border-left:3px solid #1a5c9a;font-size:10px;color:#1a5c9a;border-radius:0 4px 4px 0}
+.ps-caution{margin:4px 24px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:10px;color:#92400e;line-height:1.7}
+.ps-footer{position:absolute;bottom:0;left:0;right:0;background:#1a5c9a;color:#fff;padding:9px 24px;display:flex;justify-content:space-between;font-size:9px}
+.ps-close{position:fixed;top:14px;right:14px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center}
+@media print{.ps-close{display:none!important}}
+
+.reset-btn{position:fixed;top:16px;right:16px;z-index:300;background:rgba(255,255,255,.9);border:1px solid var(--border);color:var(--text2);border-radius:100px;font-family:var(--sans);font-size:11px;letter-spacing:.06em;padding:6px 14px;cursor:pointer;display:none;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<button class="reset-btn" id="reset-btn" onclick="resetApp()">← 最初から</button>
+
+<!-- S1: ATTRACT -->
+<section class="screen active" id="s1">
+  <div class="topbar">
+    <div><div class="tb-logo">NDソフトウェア株式会社</div><div class="tb-sub">ブース 補助金チェッカー</div></div>
+  </div>
+  <div class="s1-inner">
+    <div class="s1-badge">令和7〜8年度 最新対応</div>
+    <h1 class="s1-h1">使える補助金、<br><span>いくつ知っていますか？</span></h1>
+    <p class="s1-sub">施設種別と取り組みを選ぶだけで、今すぐ申請できる可能性のある補助金・助成金をピックアップします</p>
+    <button class="s1-cta" onclick="goTo('s2')">
+      チェックを始める
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <p class="s1-note">無料・約1分・入力不要で始められます</p>
+    <div class="s1-cards">
+      <div class="s1-mini"><div class="s1-mini-dot" style="background:#fbbf24"></div>ICT導入補助金　最大200億円規模</div>
+      <div class="s1-mini"><div class="s1-mini-dot" style="background:#34d399"></div>助成率 最大 75〜80%</div>
+      <div class="s1-mini"><div class="s1-mini-dot" style="background:#60a5fa"></div>障害福祉にも適用可</div>
+    </div>
+  </div>
+</section>
+
+<!-- S2: SELECT -->
+<section class="screen" id="s2">
+  <div class="topbar">
+    <div><div class="tb-logo">補助金チェッカー</div></div>
+    <div class="tb-step">STEP 1 / 2</div>
+  </div>
+  <div class="page-header">
+    <div class="page-step">施設情報・取り組みを教えてください</div>
+    <div class="page-title">該当するものを選んでください</div>
+    <div class="page-desc">複数選択OK。多く選ぶほど詳しい結果が出ます</div>
+  </div>
+  <div class="scroll-area">
+
+    <div class="attr-group">
+      <div class="attr-label">施設・事業所の種別</div>
+      <div class="attr-row">
+        <button class="attr-btn" id="type-kaigo" onclick="toggleType('kaigo', this)">
+          <span class="attr-btn-icon">🏥</span>
+          <div class="attr-btn-text">介護</div>
+          <div class="attr-btn-sub">特養・老健・デイ・GH等</div>
+        </button>
+        <button class="attr-btn" id="type-shougai" onclick="toggleType('shougai', this)">
+          <span class="attr-btn-icon">🤝</span>
+          <div class="attr-btn-text">障害福祉</div>
+          <div class="attr-btn-sub">支援施設・グループホーム等</div>
+        </button>
+        <button class="attr-btn" id="type-both" onclick="toggleType('both', this)">
+          <span class="attr-btn-icon">🏢</span>
+          <div class="attr-btn-text">両方</div>
+          <div class="attr-btn-sub">介護＋障害福祉</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="attr-group">
+      <div class="attr-label">今、取り組みたいこと（複数選択可）</div>
+      <div class="check-grid">
+        <div class="check-card" onclick="toggleCheck('ict', this)">
+          <div class="cc-icon">💻</div>
+          <div class="cc-text">ICTソフト・タブレット導入</div>
+          <div class="cc-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="check-card" onclick="toggleCheck('robot', this)">
+          <div class="cc-icon">🤖</div>
+          <div class="cc-text">介護ロボット・センサー導入</div>
+          <div class="cc-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="check-card" onclick="toggleCheck('hito', this)">
+          <div class="cc-icon">👥</div>
+          <div class="cc-text">人材確保・定着・賃上げ</div>
+          <div class="cc-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="check-card" onclick="toggleCheck('bcp', this)">
+          <div class="cc-icon">🛡️</div>
+          <div class="cc-text">BCP対策・事業継続</div>
+          <div class="cc-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="check-card" onclick="toggleCheck('kyaria', this)">
+          <div class="cc-icon">📈</div>
+          <div class="cc-text">非正規→正社員化</div>
+          <div class="cc-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="check-card" onclick="toggleCheck('wifi', this)">
+          <div class="cc-icon">📶</div>
+          <div class="cc-text">Wi-Fi・通信環境整備</div>
+          <div class="cc-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sticky-footer" id="s2-footer">
+    <button class="sfooter-btn" onclick="goToResult()">補助金をチェックする →</button>
+  </div>
+</section>
+
+<!-- S3: RESULT -->
+<section class="screen" id="s3">
+  <div class="topbar">
+    <div><div class="tb-logo">補助金チェッカー</div></div>
+    <div class="tb-step">STEP 2 / 2　結果</div>
+  </div>
+  <div class="result-scroll" id="result-body"></div>
+  <div class="result-footer">
+    <div class="rf-row">
+      <button class="rf-main" onclick="openModal()">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 4h12v9a1 1 0 01-1 1H3a1 1 0 01-1-1V4zm4 0V3a1 1 0 011-1h2a1 1 0 011 1v1" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>
+        一覧をメールで受け取る
+      </button>
+      <button class="rf-sub" onclick="printResult()">PDF</button>
+      <button class="rf-sub" onclick="callStaff()">スタッフを呼ぶ</button>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div id="modal-form">
+      <div class="modal-title">補助金一覧をお送りします</div>
+      <div class="modal-desc">メールアドレスを入力するだけ。<br>担当者から申請方法もご案内します。</div>
+      <input class="modal-inp" type="email" id="modal-email" placeholder="メールアドレス">
+      <input class="modal-inp" type="text"  id="modal-org"   placeholder="法人名・施設名（任意）">
+      <button class="modal-send" onclick="sendResult()">補助金一覧を受け取る</button>
+      <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
+    </div>
+    <div class="modal-success" id="modal-success">
+      <div class="modal-ok-icon">✅</div>
+      <div class="modal-ok-text">送信しました！</div>
+      <div class="modal-ok-sub">補助金一覧と申請のポイントを<br>ご入力のアドレスにお送りします。</div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF SHEET -->
+<div id="pdf-sheet"></div>
+
+<script>
+// ===== 補助金マスターデータ =====
+const SUBSIDIES = [
+  {
+    id:'kaigo-ict',
+    name:'介護テクノロジー導入支援事業',
+    category:'ICT・テクノロジー導入',
+    categoryColor:'#1a5c9a',
+    bg:'#eff6ff',
+    emoji:'💻',
+    amount:'上限 1,000万円',
+    amountColor:'#1a5c9a',
+    priority:'★★★ 最優先',
+    priorityColor:'#dc2626',
+    priorityBg:'#fee2e2',
+    desc:'介護ソフト・タブレット・Wi-Fi・センサー等の導入費を最大75〜80%助成。2024年度補正予算200億円規模で令和7年度に繰り越し実施。都道府県が窓口。',
+    tags:['厚生労働省','都道府県実施','介護保険全サービス','パッケージ導入で上限1,000万円'],
+    ndNote:'ほのぼのNEXTは補助対象製品リスト掲載済み。Care PaletteやほのぼのVoiceとのパッケージ申請も可能です。',
+    target:['kaigo'],
+    theme:['ict','robot','wifi'],
+  },
+  {
+    id:'shougai-ict',
+    name:'障害福祉分野の介護テクノロジー導入支援事業',
+    category:'ICT・テクノロジー導入（障害福祉）',
+    categoryColor:'#7c3aed',
+    bg:'#f5f3ff',
+    emoji:'🤝',
+    amount:'補助率 3/4〜4/5',
+    amountColor:'#7c3aed',
+    priority:'★★★ 最優先',
+    priorityColor:'#dc2626',
+    priorityBg:'#fee2e2',
+    desc:'障害福祉サービス事業所向けのICT・介護ロボット導入補助。都道府県・政令市・中核市が窓口。募集情報が公示されないケースもあるため早めの問い合わせが必要。',
+    tags:['厚生労働省','障害福祉サービス対象','都道府県等窓口','ICT・ロボット両対応'],
+    ndNote:'ほのぼのmoreは障害福祉分野に対応。支援記録・請求・情報共有のICT化で申請実績があります。',
+    target:['shougai','both'],
+    theme:['ict','robot'],
+  },
+  {
+    id:'it-hojo',
+    name:'デジタル化・AI導入補助金（旧IT導入補助金）',
+    category:'経産省系IT補助金',
+    categoryColor:'#0369a1',
+    bg:'#f0f9ff',
+    emoji:'🖥️',
+    amount:'補助率 1/2〜2/3',
+    amountColor:'#0369a1',
+    priority:'★★ 推奨',
+    priorityColor:'#d97706',
+    priorityBg:'#fef3c7',
+    desc:'中小企業・小規模事業者のITツール導入費を補助。介護ソフトも対象。gBizIDプライムの取得が必要。令和8年度版は準備中。',
+    tags:['経済産業省','中小企業・小規模事業者','ソフトウェア費用','通年申請'],
+    ndNote:'ほのぼのNEXTはIT導入補助金の採択ITツールです。5つの申請枠（通常枠・インボイス枠等）で申請可能。',
+    target:['kaigo','shougai','both'],
+    theme:['ict'],
+  },
+  {
+    id:'chinage',
+    name:'介護分野の職員の賃上げ・職場環境改善支援事業',
+    category:'人材確保・賃上げ',
+    categoryColor:'#059669',
+    bg:'#ecfdf5',
+    emoji:'💰',
+    amount:'介護報酬に基づき算出',
+    amountColor:'#059669',
+    priority:'★★★ 最優先',
+    priorityColor:'#dc2626',
+    priorityBg:'#fee2e2',
+    desc:'2026年6月の介護報酬改定に先立ち、職員の賃上げを実施した介護事業者を支援。ICT活用により収支改善した場合の賃金還元を要件とするケースあり。',
+    tags:['厚生労働省','介護職員賃上げ','職場環境改善','ICT導入と組み合わせ可'],
+    ndNote:'ICT導入補助金とセット活用で「業務効率化→賃上げ→補助金獲得」のサイクルを作れます。',
+    target:['kaigo'],
+    theme:['hito','ict'],
+  },
+  {
+    id:'career',
+    name:'キャリアアップ助成金',
+    category:'人材確保・定着',
+    categoryColor:'#0891b2',
+    bg:'#ecfeff',
+    emoji:'📈',
+    amount:'1人あたり最大80万円',
+    amountColor:'#0891b2',
+    priority:'★★ 推奨',
+    priorityColor:'#d97706',
+    priorityBg:'#fef3c7',
+    desc:'非正規雇用労働者（パート・アルバイト・有期契約）を正社員に転換した場合に助成。令和7年度から重点支援対象者制度が導入。厚労省管轄。',
+    tags:['厚生労働省','正社員化コース','賃金規定等改定コース','年収の壁対応コースあり'],
+    ndNote:'人材定着を進める際、ICT化による業務負担軽減と合わせて活用することで効果が高まります。',
+    target:['kaigo','shougai','both'],
+    theme:['kyaria','hito'],
+  },
+  {
+    id:'bcp',
+    name:'BCP対策関連補助金（自治体・中小企業強靱化法）',
+    category:'BCP・事業継続',
+    categoryColor:'#b45309',
+    bg:'#fffbeb',
+    emoji:'🛡️',
+    amount:'自治体により異なる',
+    amountColor:'#b45309',
+    priority:'★ 要確認',
+    priorityColor:'#6b7280',
+    priorityBg:'#f3f4f6',
+    desc:'BCP策定・実践を支援する自治体補助金（安否確認システム・自家発電・蓄電池等が対象）と、国の「事業継続力強化計画」認定による特別償却20%の税制措置。',
+    tags:['自治体実施（地域差あり）','安否確認システム対象','税制優遇あり','介護保険法でBCP義務化済み'],
+    ndNote:'2024年度から介護事業所のBCP策定が義務化。ほのぼのシリーズのクラウド対応・情報連携機能がBCP対策に活用できます。',
+    target:['kaigo','shougai','both'],
+    theme:['bcp'],
+  },
+  {
+    id:'jka',
+    name:'JKA補助金（公益財団法人JKA）',
+    category:'機械・ICT設備導入',
+    categoryColor:'#7c3aed',
+    bg:'#f5f3ff',
+    emoji:'🔧',
+    amount:'購入金額の一部を補助',
+    amountColor:'#7c3aed',
+    priority:'★ 要確認',
+    priorityColor:'#6b7280',
+    priorityBg:'#f3f4f6',
+    desc:'社会福祉法人・NPO法人等を対象にした機械設備等の補助。2026年第2回募集は5月25日開始予定。',
+    tags:['社会福祉法人・NPO法人対象','競輪・オートレース収益','第2回2026年5月25日開始予定'],
+    ndNote:'法人格が対象の補助金です。機器等とあわせてソフトウェア導入も対象となる場合があります。',
+    target:['kaigo','shougai','both'],
+    theme:['ict','robot'],
+  },
+];
+
+// ===== 状態 =====
+let selectedType = null;
+let selectedThemes = new Set();
+
+function toggleType(type, el) {
+  selectedType = selectedType === type ? null : type;
+  document.querySelectorAll('.attr-btn').forEach(b => b.classList.remove('selected'));
+  if(selectedType) el.classList.add('selected');
+  updateFooter();
+}
+
+function toggleCheck(theme, el) {
+  if(selectedThemes.has(theme)) {
+    selectedThemes.delete(theme);
+    el.classList.remove('selected');
+  } else {
+    selectedThemes.add(theme);
+    el.classList.add('selected');
+  }
+  updateFooter();
+}
+
+function updateFooter() {
+  const footer = document.getElementById('s2-footer');
+  const ready = selectedType && selectedThemes.size > 0;
+  footer.classList.toggle('ready', ready);
+}
+
+// ===== 結果生成 =====
+function getMatchedSubsidies() {
+  return SUBSIDIES.filter(s => {
+    const typeMatch = !selectedType || s.target.includes(selectedType) || s.target.includes('both') || selectedType === 'both';
+    const themeMatch = s.theme.some(t => selectedThemes.has(t));
+    return typeMatch && themeMatch;
+  });
+}
+
+function buildResult() {
+  const matches = getMatchedSubsidies();
+  const body = document.getElementById('result-body');
+  const typeLabel = {kaigo:'介護', shougai:'障害福祉', both:'介護・障害福祉'}[selectedType] || '';
+
+  let html = `
+    <div class="summary-banner">
+      <div class="sb-icon">💰</div>
+      <div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <div class="sb-count">${matches.length}</div>
+          <div class="sb-unit">件の補助金・助成金</div>
+        </div>
+        <div class="sb-text">${typeLabel}・選択した取り組みに該当する可能性があります</div>
+      </div>
+    </div>
+    <div class="caution-box">
+      <strong>⚠️ ご注意：</strong>補助金制度は毎年変わります。本情報は令和7〜8年度の概要を基にしており、最新の申請要件・受付期間は各都道府県・省庁の公式情報をご確認ください。
+    </div>`;
+
+  matches.forEach((s, i) => {
+    html += `
+      <div class="subsidy-card" style="animation:fadeUp .35s ${i*.07}s ease both;opacity:0">
+        <div class="sc-header" style="background:${s.bg}20">
+          <div class="sc-badge" style="background:${s.bg}">${s.emoji}</div>
+          <div class="sc-header-main">
+            <div class="sc-category" style="color:${s.categoryColor}">${s.category}</div>
+            <div class="sc-name">${s.name}</div>
+          </div>
+          <div class="sc-priority" style="color:${s.priorityColor};background:${s.priorityBg}">${s.priority}</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-amount">
+            <div class="sc-amount-num" style="color:${s.amountColor}">${s.amount}</div>
+          </div>
+          <div class="sc-desc">${s.desc}</div>
+          <div class="sc-tags">${s.tags.map(t => `<span class="sc-tag">${t}</span>`).join('')}</div>
+          <div class="sc-nd-note">📌 NDソフトウェアとの関係：${s.ndNote}</div>
+        </div>
+      </div>`;
+  });
+
+  body.innerHTML = html;
+}
+
+// ===== 印刷 =====
+function printResult() {
+  const matches = getMatchedSubsidies();
+  const today = new Date().toLocaleDateString('ja-JP', {year:'numeric',month:'long',day:'numeric'});
+  const typeLabel = {kaigo:'介護', shougai:'障害福祉', both:'介護・障害福祉'}[selectedType] || '';
+
+  const blocks = matches.map(s =>
+    '<div class="ps-subsidy">'
+    + '<div class="ps-subsidy-head">'
+    + '<span style="font-size:16px;margin-right:8px">' + s.emoji + '</span>'
+    + '<span class="ps-subsidy-name">' + s.name + '</span>'
+    + '<span class="ps-subsidy-amount" style="color:' + s.amountColor + '">' + s.amount + '</span>'
+    + '</div>'
+    + '<div class="ps-subsidy-body">' + s.desc
+    + '<div class="ps-nd-note">' + s.ndNote + '</div>'
+    + '</div>'
+    + '</div>'
+  ).join('');
+
+  const sheet = document.getElementById('pdf-sheet');
+  sheet.innerHTML =
+    '<button class="ps-close" onclick="closePrint()">✕</button>'
+    + '<div class="ps-wrap">'
+    + '<div class="ps-header">'
+    + '<div><div class="ps-logo-main">NDソフトウェア株式会社</div><div class="ps-logo-sub">ブース 補助金チェッカー 結果レポート</div></div>'
+    + '<div class="ps-date">' + today + '</div>'
+    + '</div>'
+    + '<div class="ps-title-bar">'
+    + '<div class="ps-karte-title">補助金活用チェックリスト</div>'
+    + '<div class="ps-karte-sub">対象：' + typeLabel + '事業所 ／ 該当件数：' + matches.length + '件</div>'
+    + '</div>'
+    + '<div class="ps-section" style="padding-top:14px">'
+    + '<div class="ps-section-label">該当する補助金・助成金</div>'
+    + blocks
+    + '</div>'
+    + '<div class="ps-caution">⚠️ 本資料は令和7〜8年度情報を基にしています。最新の申請要件・受付期間は各都道府県・省庁の公式情報をご確認ください。</div>'
+    + '<div class="ps-footer">'
+    + '<span>NDソフトウェア株式会社 / ND Software Co., Ltd.</span>'
+    + '<span>補助金申請サポートについてはスタッフまで</span>'
+    + '</div>'
+    + '</div>';
+
+  sheet.classList.add('open');
+  setTimeout(() => window.print(), 300);
+}
+
+function closePrint() {
+  const s = document.getElementById('pdf-sheet');
+  s.classList.remove('open');
+  s.innerHTML = '';
+}
+
+// ===== ナビ =====
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('reset-btn').style.display = id === 's1' ? 'none' : 'block';
+}
+
+function goToResult() {
+  if(!selectedType || selectedThemes.size === 0) return;
+  buildResult();
+  goTo('s3');
+}
+
+function resetApp() {
+  selectedType = null;
+  selectedThemes.clear();
+  document.querySelectorAll('.attr-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.check-card').forEach(c => c.classList.remove('selected'));
+  updateFooter();
+  document.getElementById('modal-email').value = '';
+  document.getElementById('modal-org').value = '';
+  document.getElementById('modal-form').style.display = 'block';
+  document.getElementById('modal-success').classList.remove('show');
+  closeModal();
+  closePrint();
+  goTo('s1');
+}
+
+// ===== モーダル =====
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function sendResult() {
+  const email = document.getElementById('modal-email').value.trim();
+  if(!email || !email.includes('@')) {
+    document.getElementById('modal-email').style.borderColor = '#ef4444';
+    setTimeout(() => document.getElementById('modal-email').style.borderColor = '', 1400);
+    return;
+  }
+  document.getElementById('modal-form').style.display = 'none';
+  document.getElementById('modal-success').classList.add('show');
+  setTimeout(() => { closeModal(); resetApp(); }, 3500);
+}
+function callStaff() { alert('スタッフをお呼びします。\n少々お待ちください。'); }
+
+document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>業界平均比較ツール｜うちの施設は平均より大変？</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#fafbfc;
+  --surface:#fff;
+  --surface2:#f1f4f9;
+  --border:#e2e8f0;
+  --accent:#c84b2f;
+  --accent2:#2f6fc8;
+  --green:#16a34a;
+  --warn:#d97706;
+  --red:#dc2626;
+  --text:#0f172a;
+  --text2:#475569;
+  --text3:#94a3b8;
+  --mono:'DM Mono',monospace;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Zen Kaku Gothic New',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);touch-action:manipulation}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s ease;transform:translateY(14px)}
+.screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
+
+/* TOPBAR */
+.topbar{background:var(--accent);color:#fff;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tb-title{font-family:var(--display);font-size:14px;font-weight:900}
+.tb-sub{font-size:10px;opacity:.7;margin-top:1px}
+.tb-step{font-size:11px;letter-spacing:.08em;background:rgba(255,255,255,.18);padding:4px 12px;border-radius:100px}
+
+/* ===== S1 ATTRACT ===== */
+#s1{background:linear-gradient(150deg,#1a1410 0%,#2d1a10 40%,#c84b2f 100%);justify-content:center;align-items:center;cursor:pointer}
+.s1-inner{text-align:center;padding:40px 32px;max-width:520px}
+.s1-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:6px 16px;font-size:11px;color:rgba(255,255,255,.8);letter-spacing:.12em;margin-bottom:28px}
+.s1-h1{font-family:var(--display);font-size:clamp(28px,6vw,54px);font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.03em;margin-bottom:16px}
+.s1-h1 em{font-style:normal;color:#fbbf24;display:block}
+.s1-sub{font-size:14px;color:rgba(255,255,255,.7);line-height:1.85;margin-bottom:40px;font-weight:300}
+.s1-cta{display:inline-flex;align-items:center;gap:10px;background:#fff;color:var(--accent);border:none;border-radius:100px;font-family:var(--sans);font-size:16px;font-weight:700;padding:18px 40px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:transform .15s}
+.s1-cta:active{transform:scale(.97)}
+.s1-note{margin-top:18px;font-size:12px;color:rgba(255,255,255,.4);letter-spacing:.06em}
+
+/* ===== S2 INPUT ===== */
+#s2{background:var(--bg);overflow:hidden}
+.page-header{padding:20px 22px 0;flex-shrink:0}
+.page-step{font-size:11px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin-bottom:6px;font-weight:600}
+.page-title{font-family:var(--display);font-size:clamp(17px,3.5vw,24px);font-weight:900;line-height:1.25;margin-bottom:4px}
+.page-desc{font-size:12px;color:var(--text2);font-weight:300}
+.scroll-area{flex:1;overflow-y:auto;padding:16px 22px 100px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+
+/* スライダー入力 */
+.input-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px}
+.ic-label{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.ic-label-icon{font-size:18px}
+.ic-hint{font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.5}
+.ic-val-row{display:flex;align-items:baseline;gap:6px;margin-bottom:10px}
+.ic-val{font-family:var(--mono);font-size:28px;font-weight:500;color:var(--accent);transition:color .2s}
+.ic-unit{font-size:12px;color:var(--text2)}
+.ic-avg{font-size:11px;color:var(--text3);margin-left:auto}
+.ic-avg span{color:var(--text2);font-weight:600}
+.slider-wrap{position:relative;height:24px;display:flex;align-items:center}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;background:var(--border);border-radius:3px;outline:none;cursor:pointer;position:relative;z-index:1}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;background:#fff;border:2.5px solid var(--accent);border-radius:50%;cursor:pointer;box-shadow:0 2px 6px rgba(200,75,47,.2);transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:active{transform:scale(1.2)}
+.slider-fill{position:absolute;left:0;top:50%;height:5px;background:var(--accent);border-radius:3px;pointer-events:none;transform:translateY(-50%);z-index:0;transition:width .1s}
+
+/* 固定ボタン */
+.sticky-btn{position:fixed;bottom:0;left:0;right:0;padding:12px 22px 24px;background:linear-gradient(0deg,var(--bg) 60%,transparent)}
+.btn-go{width:100%;background:linear-gradient(135deg,var(--accent),#e85a35);color:#fff;border:none;border-radius:12px;font-family:var(--sans);font-size:15px;font-weight:700;padding:16px;cursor:pointer;transition:opacity .2s;box-shadow:0 4px 16px rgba(200,75,47,.25)}
+.btn-go:active{opacity:.85}
+
+/* ===== S3 RESULT ===== */
+#s3{background:var(--bg);overflow:hidden}
+.result-scroll{flex:1;overflow-y:auto;padding:16px 22px 160px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+
+/* 判定バナー */
+.verdict-banner{border-radius:16px;padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:16px}
+.vb-icon{font-size:36px;flex-shrink:0}
+.vb-level{font-family:var(--display);font-size:20px;font-weight:900;margin-bottom:4px}
+.vb-text{font-size:12px;line-height:1.7;opacity:.85}
+
+/* 比較グラフカード */
+.compare-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px}
+.cc-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.cc-icon{font-size:20px}
+.cc-title{font-size:13px;font-weight:700;flex:1}
+.cc-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;letter-spacing:.04em}
+.cc-body{padding:14px 16px}
+
+/* バーグラフ */
+.bar-row{margin-bottom:12px}
+.bar-row:last-child{margin-bottom:0}
+.bar-meta{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px}
+.bar-label{font-size:11px;color:var(--text2)}
+.bar-values{display:flex;align-items:baseline;gap:4px}
+.bar-my{font-family:var(--mono);font-size:18px;font-weight:500}
+.bar-sep{font-size:11px;color:var(--text3)}
+.bar-avg-val{font-family:var(--mono);font-size:13px;color:var(--text3)}
+.bar-track{height:10px;background:var(--surface2);border-radius:5px;overflow:visible;position:relative}
+.bar-avg-line{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--text3);border-radius:1px;z-index:2}
+.bar-avg-line::after{content:'平均';position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--text3);white-space:nowrap;font-family:var(--mono)}
+.bar-fill{height:100%;border-radius:5px;transition:width .8s cubic-bezier(.34,1.2,.64,1);position:relative;z-index:1}
+
+/* アドバイスボックス */
+.advice-box{background:rgba(200,75,47,.07);border:1px solid rgba(200,75,47,.2);border-left:4px solid var(--accent);border-radius:0 10px 10px 0;padding:12px 14px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.75}
+.advice-box strong{color:var(--accent);font-weight:600}
+
+/* NDソフトウェア接続 */
+.nd-card{background:linear-gradient(135deg,rgba(200,75,47,.08),rgba(47,111,200,.06));border:1px solid rgba(200,75,47,.2);border-radius:14px;padding:16px;margin-bottom:12px}
+.nd-card-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.nd-items{display:flex;flex-direction:column;gap:6px}
+.nd-item{font-size:12px;color:var(--text2);line-height:1.6;display:flex;align-items:flex-start;gap:6px}
+.nd-item::before{content:'→';color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px}
+
+/* 出典 */
+.source-note{font-size:10px;color:var(--text3);line-height:1.7;margin-bottom:12px;padding:10px 14px;background:var(--surface2);border-radius:8px}
+
+/* フッター */
+.result-footer{position:fixed;bottom:0;left:0;right:0;padding:12px 22px 24px;background:linear-gradient(0deg,var(--bg) 60%,transparent)}
+.rf-row{display:flex;gap:8px}
+.rf-main{flex:1;background:linear-gradient(135deg,var(--accent),#e85a35);color:#fff;border:none;border-radius:12px;font-family:var(--sans);font-size:14px;font-weight:700;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+.rf-sub{background:var(--surface);color:var(--text);border:1.5px solid var(--border);border-radius:12px;font-family:var(--sans);font-size:13px;font-weight:500;padding:14px 14px;cursor:pointer;white-space:nowrap}
+.rf-sub:active{background:var(--surface2)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{width:100%;background:var(--surface);border-radius:22px 22px 0 0;padding:26px 26px 44px;animation:slide-up .3s cubic-bezier(.34,1.2,.64,1)}
+@keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-family:var(--display);font-size:18px;font-weight:900;margin-bottom:6px}
+.modal-desc{font-size:13px;color:var(--text2);margin-bottom:18px;font-weight:300}
+.modal-inp{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);font-size:16px;color:var(--text);padding:13px 15px;margin-bottom:10px;transition:border-color .2s}
+.modal-inp:focus{outline:none;border-color:var(--accent)}
+.modal-inp::placeholder{color:var(--text3)}
+.modal-send{width:100%;background:linear-gradient(135deg,var(--accent),#e85a35);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:15px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px}
+.modal-cancel{width:100%;background:none;border:none;font-family:var(--sans);font-size:13px;color:var(--text3);padding:8px;cursor:pointer}
+.modal-success{display:none;text-align:center;padding:16px 0}
+.modal-success.show{display:block}
+.m-ok-icon{font-size:44px;margin-bottom:10px}
+.m-ok-text{font-size:16px;font-weight:700;color:var(--green)}
+.m-ok-sub{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.7}
+
+/* PDF */
+@media print{body>*:not(#pdf-sheet){display:none!important}#pdf-sheet{display:block!important}@page{size:A4 portrait;margin:0}}
+#pdf-sheet{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);overflow-y:auto;padding:28px 16px 56px;box-sizing:border-box;font-family:'Noto Sans JP','Meiryo',sans-serif}
+#pdf-sheet.open{display:block}
+.ps-wrap{width:210mm;min-height:297mm;margin:0 auto;background:#fff;position:relative;padding:0 0 60px;box-shadow:0 4px 40px rgba(0,0,0,.4);border-radius:4px}
+.ps-header{background:#c84b2f;color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
+.ps-logo{font-size:14px;font-weight:700}.ps-logo-sub{font-size:10px;opacity:.7;margin-top:2px}.ps-date{font-size:10px;opacity:.65;text-align:right}
+.ps-title-bar{background:#fdf4f2;border-bottom:4px solid #c84b2f;padding:18px 24px 14px}
+.ps-main-title{font-size:20px;font-weight:900;color:#0f172a;letter-spacing:-.02em}.ps-main-sub{font-size:12px;color:#475569;margin-top:4px}
+.ps-section{padding:14px 24px 0}.ps-section-label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px;display:flex;align-items:center;gap:8px}.ps-section-label::after{content:'';flex:1;height:1px;background:#e2e8f0}
+.ps-metric-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.ps-metric-box{border:1px solid #e2e8f0;border-radius:8px;padding:12px;border-top:3px solid #c84b2f}
+.ps-metric-lbl{font-size:9px;color:#94a3b8;margin-bottom:4px}
+.ps-metric-my{font-size:20px;font-weight:900;color:#c84b2f;line-height:1}
+.ps-metric-avg{font-size:10px;color:#64748b;margin-top:2px}
+.ps-advice{padding:10px 14px;background:#fff5f5;border-left:3px solid #c84b2f;border-radius:0 6px 6px 0;font-size:11px;color:#444;line-height:1.75;margin-bottom:10px}
+.ps-nd{padding:10px 14px;background:#fff5f5;border-radius:6px;font-size:11px;color:#c84b2f;border:1px solid rgba(200,75,47,.2);line-height:1.7}
+.ps-source{padding:10px 14px;background:#f8fafc;border-radius:6px;font-size:9px;color:#94a3b8;line-height:1.7}
+.ps-footer{position:absolute;bottom:0;left:0;right:0;background:#c84b2f;color:#fff;padding:9px 24px;display:flex;justify-content:space-between;font-size:9px}
+.ps-close{position:fixed;top:14px;right:14px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center}
+@media print{.ps-close{display:none!important}}
+
+.reset-btn{position:fixed;top:14px;right:14px;z-index:300;background:rgba(255,255,255,.92);border:1px solid var(--border);color:var(--text2);border-radius:100px;font-family:var(--sans);font-size:11px;padding:6px 14px;cursor:pointer;display:none;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<button class="reset-btn" id="reset-btn" onclick="resetApp()">← 最初から</button>
+
+<!-- S1: ATTRACT -->
+<section class="screen active" id="s1" onclick="goTo('s2')">
+  <div class="s1-inner">
+    <div class="s1-eyebrow">📊 業界平均との比較診断</div>
+    <h1 class="s1-h1">うちの施設、<em>平均より大変？</em></h1>
+    <p class="s1-sub">記録時間・残業・返戻率・離職率・夜間対応の5項目を入力するだけ。業界平均データと即座に比較します。</p>
+    <button class="s1-cta">
+      比べてみる
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <p class="s1-note">所要時間：約30秒　スライダーを動かすだけ</p>
+  </div>
+</section>
+
+<!-- S2: INPUT -->
+<section class="screen" id="s2">
+  <div class="topbar">
+    <div><div class="tb-title">業界平均比較ツール</div></div>
+    <div class="tb-step">入力</div>
+  </div>
+  <div class="page-header">
+    <div class="page-step">貴施設の現状を入力</div>
+    <div class="page-title">スライダーを動かしてください</div>
+    <div class="page-desc">おおよその数値でOK。直感で選んでください</div>
+  </div>
+  <div class="scroll-area">
+
+    <!-- 記録業務時間 -->
+    <div class="input-card">
+      <div class="ic-label"><span class="ic-label-icon">📝</span>記録業務時間（1人・1日あたり）</div>
+      <div class="ic-hint">ケア後の入力・紙転記・申し送り作成など。<br>「えっ、こんなにかかってるの？」が多い項目です。</div>
+      <div class="ic-val-row">
+        <div class="ic-val" id="v-rec">45</div>
+        <div class="ic-unit">分 / 人 / 日</div>
+        <div class="ic-avg">業界平均 <span>約45分</span></div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-fill" id="f-rec"></div>
+        <input type="range" id="s-rec" min="10" max="120" value="45" step="5" oninput="sv('rec',this.value,'分');updateFill('rec')">
+      </div>
+    </div>
+
+    <!-- 残業時間 -->
+    <div class="input-card">
+      <div class="ic-label"><span class="ic-label-icon">⏰</span>月間残業時間（スタッフ平均）</div>
+      <div class="ic-hint">サービス残業を含む実態ベースで。<br>「ほぼ毎日少し残ってる」なら10〜20時間程度。</div>
+      <div class="ic-val-row">
+        <div class="ic-val" id="v-ot">10</div>
+        <div class="ic-unit">時間 / 月</div>
+        <div class="ic-avg">業界平均 <span>約6〜10時間</span></div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-fill" id="f-ot"></div>
+        <input type="range" id="s-ot" min="0" max="40" value="10" step="1" oninput="sv('ot',this.value,'時間');updateFill('ot')">
+      </div>
+    </div>
+
+    <!-- 請求返戻率 -->
+    <div class="input-card">
+      <div class="ic-label"><span class="ic-label-icon">🧾</span>請求ミス・返戻率（月間）</div>
+      <div class="ic-hint">国保連に提出した請求のうち、差し戻し・訂正が発生した割合。<br>「毎月数件は返ってくる」なら2〜5%程度。</div>
+      <div class="ic-val-row">
+        <div class="ic-val" id="v-ret">2</div>
+        <div class="ic-unit">%</div>
+        <div class="ic-avg">業界平均 <span>約1〜2%</span></div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-fill" id="f-ret"></div>
+        <input type="range" id="s-ret" min="0" max="15" value="2" step="1" oninput="sv('ret',this.value,'%');updateFill('ret')">
+      </div>
+    </div>
+
+    <!-- 離職率 -->
+    <div class="input-card">
+      <div class="ic-label"><span class="ic-label-icon">👤</span>年間離職率</div>
+      <div class="ic-hint">過去1年間で何%のスタッフが辞めたか。<br>全体の2〜3割が辞めているなら要警戒。</div>
+      <div class="ic-val-row">
+        <div class="ic-val" id="v-tr">15</div>
+        <div class="ic-unit">% / 年</div>
+        <div class="ic-avg">業界平均 <span>約14〜15%</span></div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-fill" id="f-tr"></div>
+        <input type="range" id="s-tr" min="0" max="50" value="15" step="1" oninput="sv('tr',this.value,'%');updateFill('tr')">
+      </div>
+    </div>
+
+    <!-- 夜間対応負担 -->
+    <div class="input-card">
+      <div class="ic-label"><span class="ic-label-icon">🌙</span>夜間の訪室・巡視回数（1スタッフ・1夜勤あたり）</div>
+      <div class="ic-hint">見守り・確認・対応で何回部屋を回るか。<br>センサーなしの施設は多い傾向にあります。</div>
+      <div class="ic-val-row">
+        <div class="ic-val" id="v-night">30</div>
+        <div class="ic-unit">回 / 夜勤</div>
+        <div class="ic-avg">ICT導入施設平均 <span>約10〜15回</span></div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-fill" id="f-night"></div>
+        <input type="range" id="s-night" min="5" max="80" value="30" step="5" oninput="sv('night',this.value,'回');updateFill('night')">
+      </div>
+    </div>
+
+  </div>
+  <div class="sticky-btn">
+    <button class="btn-go" onclick="goToResult()">比較結果を見る →</button>
+  </div>
+</section>
+
+<!-- S3: RESULT -->
+<section class="screen" id="s3">
+  <div class="topbar">
+    <div><div class="tb-title">業界平均比較ツール</div></div>
+    <div class="tb-step">比較結果</div>
+  </div>
+  <div class="result-scroll" id="result-body"></div>
+  <div class="result-footer">
+    <div class="rf-row">
+      <button class="rf-main" onclick="openModal()">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 4h12v9a1 1 0 01-1 1H3a1 1 0 01-1-1V4zm4 0V3a1 1 0 011-1h2a1 1 0 011 1v1" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>
+        結果をメールで受け取る
+      </button>
+      <button class="rf-sub" onclick="printResult()">PDF</button>
+      <button class="rf-sub" onclick="callStaff()">スタッフを呼ぶ</button>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div id="modal-form">
+      <div class="modal-title">比較結果をお送りします</div>
+      <div class="modal-desc">メールアドレスを入力するだけ。<br>改善のヒントと一緒にお届けします。</div>
+      <input class="modal-inp" type="email" id="modal-email" placeholder="メールアドレス">
+      <input class="modal-inp" type="text"  id="modal-org"   placeholder="法人名・施設名（任意）">
+      <button class="modal-send" onclick="sendResult()">結果を受け取る</button>
+      <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
+    </div>
+    <div class="modal-success" id="modal-success">
+      <div class="m-ok-icon">✅</div>
+      <div class="m-ok-text">送信しました！</div>
+      <div class="m-ok-sub">比較結果と改善のポイントを<br>ご入力のアドレスにお送りします。</div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF SHEET -->
+<div id="pdf-sheet"></div>
+
+<script>
+// ===== 業界平均データ（公的統計・厚労省資料より） =====
+const AVG = {
+  rec:   { val:45,  label:'記録業務時間',    unit:'分/人/日',   src:'厚労省 生産性向上ガイドライン・ICT導入前調査より' },
+  ot:    { val:7,   label:'月間残業時間',     unit:'時間/月',    src:'介護労働安定センター「介護労働実態調査（令和5年度）」' },
+  tr:    { val:14.4,label:'年間離職率',       unit:'%',          src:'介護労働安定センター「介護労働実態調査（令和5年度）」' },
+  ret:   { val:1.5, label:'請求ミス・返戻率',   unit:'%',        src:'介護給付費請求実態（国保連業界推計値より）' },
+  night: { val:12,  label:'夜間訪室・巡視回数', unit:'回/夜勤',  src:'厚労省 介護ロボット等効果測定事業報告書（令和5年度）' },
+};
+
+// 自施設の入力値
+let myVals = { rec:45, ot:10, ret:2, tr:15, night:30 };
+
+function sv(id, val, unit) {
+  myVals[id] = +val;
+  document.getElementById('v-'+id).textContent = val;
+  // 平均との差で色変化
+  const avg = AVG[id].val;
+  const el = document.getElementById('v-'+id);
+  el.style.color = +val > avg * 1.2 ? '#dc2626' : +val > avg ? '#d97706' : '#16a34a';
+}
+
+function updateFill(id) {
+  const el = document.getElementById('s-'+id);
+  const pct = (el.value - el.min)/(el.max - el.min)*100;
+  document.getElementById('f-'+id).style.width = pct+'%';
+  const avg = AVG[id].val;
+  document.getElementById('f-'+id).style.background =
+    +el.value > avg * 1.2 ? '#dc2626' : +el.value > avg ? '#d97706' : '#16a34a';
+}
+
+// ===== スコア計算 =====
+function calcScore() {
+  let score = 0;
+  const checks = {
+    rec:   (v,a) => v > a*1.3 ? 3 : v > a ? 1 : 0,
+    ot:    (v,a) => v > a*2   ? 3 : v > a ? 1 : 0,
+    ret:   (v,a) => v > a*2   ? 3 : v > a ? 1 : 0,
+    tr:    (v,a) => v > a*1.5 ? 3 : v > a ? 1 : 0,
+    night: (v,a) => v > a*2   ? 3 : v > a ? 1 : 0,
+  };
+  Object.keys(checks).forEach(k => {
+    score += checks[k](myVals[k], AVG[k].val);
+  });
+  return score; // max 12
+}
+
+// ===== 結果生成 =====
+function buildResult() {
+  const score = calcScore();
+  const body = document.getElementById('result-body');
+
+  // 判定
+  let verdict, vColor, vBg, vMsg;
+  if(score <= 2) {
+    verdict = '😊 平均水準です';
+    vColor = '#15803d'; vBg = '#f0fdf4';
+    vMsg = '全体的に業界平均に近い水準です。現状維持を続けながら、ICT化でさらなる効率化を目指せます。';
+  } else if(score <= 5) {
+    verdict = '😐 一部で平均を超えています';
+    vColor = '#b45309'; vBg = '#fffbeb';
+    vMsg = '一部の項目で業界平均を上回っています。優先度の高い課題から改善に取り組むことをお勧めします。';
+  } else if(score <= 9) {
+    verdict = '😟 平均より負担が大きい状況です';
+    vColor = '#b91c1c'; vBg = '#fef2f2';
+    vMsg = '複数の項目で業界平均を上回っています。早めに取り組みを始めることで、スタッフの定着率改善や業務効率化が期待できます。';
+  } else {
+    verdict = '🆘 かなり大変な状況です';
+    vColor = '#7f1d1d'; vBg = '#fff1f2';
+    vMsg = '全体的に業界平均を大きく上回っています。このまま放置するとスタッフの離職や採用困難のリスクが高まります。今すぐ改善に動きましょう。';
+  }
+
+  // バーグラフ用の項目定義
+  const items = [
+    {
+      id:'rec', icon:'📝', title:'記録業務時間（1人・1日あたり）',
+      myVal: myVals.rec, avg: AVG.rec.val, unit:'分', max:120,
+      goodDir:'下',
+      advice: myVals.rec > AVG.rec.val * 1.2
+        ? `業界平均の<strong>${Math.round(myVals.rec/AVG.rec.val*10)/10}倍</strong>の記録時間がかかっています。ICT化・音声入力の導入で月間<strong>${Math.round((myVals.rec-30)/60*20*10)/10}時間</strong>以上の削減が見込めます。`
+        : myVals.rec > AVG.rec.val
+        ? '平均をやや上回っています。記録業務の電子化・テンプレート活用で改善できます。'
+        : '記録業務は平均的な水準です。ICT化でさらに短縮できます。',
+    },
+    {
+      id:'ot', icon:'⏰', title:'月間残業時間（スタッフ平均）',
+      myVal: myVals.ot, avg: AVG.ot.val, unit:'時間', max:40,
+      goodDir:'下',
+      advice: myVals.ot > AVG.ot.val * 2
+        ? `月<strong>${myVals.ot}時間</strong>の残業は業界平均の<strong>${Math.round(myVals.ot/AVG.ot.val*10)/10}倍</strong>。記録・書類業務の自動化が最も効果的な削減策です。`
+        : myVals.ot > AVG.ot.val
+        ? '平均を上回っています。記録・書類のICT化で残業削減につながります。'
+        : '残業時間は平均的な水準です。',
+    },
+    {
+      id:'ret', icon:'🧾', title:'請求ミス・返戻率（月間）',
+      myVal: myVals.ret, avg: AVG.ret.val, unit:'%', max:15,
+      goodDir:'下',
+      advice: myVals.ret > AVG.ret.val * 2
+        ? `返戻率<strong>${myVals.ret}%</strong>は業界平均の約<strong>${Math.round(myVals.ret/AVG.ret.val*10)/10}倍</strong>。返戻1件あたりの対応コストは再入力・問い合わせ・再請求で数時間に及びます。毎月積み重なる損失を請求ソフトの自動チェック機能で止められます。`
+        : myVals.ret > AVG.ret.val
+        ? '業界平均をやや上回っています。請求ソフトの自動バリデーション機能を活用することで返戻を減らせます。'
+        : '返戻率は業界平均以下の良好な水準です。',
+    },
+    {
+      id:'tr', icon:'👤', title:'年間離職率',
+      myVal: myVals.tr, avg: AVG.tr.val, unit:'%', max:50,
+      goodDir:'下',
+      advice: myVals.tr > AVG.tr.val * 1.5
+        ? `離職率<strong>${myVals.tr}%</strong>は業界平均の約<strong>${Math.round(myVals.tr/AVG.tr.val*10)/10}倍</strong>。「業務が大変すぎる」が離職理由の上位です。ICT化による業務負担軽減が定着率向上の第一歩です。`
+        : myVals.tr > AVG.tr.val
+        ? '業界平均をやや上回っています。職場環境改善の余地があります。'
+        : '離職率は業界平均以下です。',
+    },
+    {
+      id:'night', icon:'🌙', title:'夜間訪室・巡視回数（1スタッフ・1夜勤）',
+      myVal: myVals.night, avg: AVG.night.val, unit:'回', max:80,
+      goodDir:'下',
+      advice: myVals.night > AVG.night.val * 2
+        ? `<strong>${myVals.night}回</strong>の夜間巡視は、見守りセンサー導入施設の平均の<strong>${Math.round(myVals.night/AVG.night.val*10)/10}倍</strong>。センサーで「異変のある時だけ対応」に変えることで夜勤負担を大幅に削減できます。`
+        : myVals.night > AVG.night.val
+        ? 'センサー導入施設の平均を上回っています。見守りセンサーの導入を検討できます。'
+        : 'センサー導入施設と同等水準です。',
+    },
+  ];
+
+  let html = `
+    <div class="verdict-banner" style="background:${vBg};border:1px solid ${vColor}30">
+      <div class="vb-icon">${verdict.split(' ')[0]}</div>
+      <div>
+        <div class="vb-level" style="color:${vColor}">${verdict.replace(/^[^\s]+\s/,'')}</div>
+        <div class="vb-text" style="color:${vColor}">${vMsg}</div>
+      </div>
+    </div>`;
+
+  items.forEach(item => {
+    const myPct = Math.min(item.myVal / item.max * 100, 100);
+    const avgPct = Math.min(item.avg / item.max * 100, 100);
+    const isOver = item.myVal > item.avg;
+    const barColor = item.myVal > item.avg * 1.2 ? '#dc2626' : item.myVal > item.avg ? '#d97706' : '#16a34a';
+    const badge = item.myVal > item.avg * 1.2 ? '⚠️ 要対応' : item.myVal > item.avg ? '△ やや多め' : '✓ 平均以下';
+    const badgeColor = item.myVal > item.avg * 1.2 ? '#dc2626' : item.myVal > item.avg ? '#b45309' : '#15803d';
+    const badgeBg = item.myVal > item.avg * 1.2 ? '#fee2e2' : item.myVal > item.avg ? '#fef3c7' : '#f0fdf4';
+
+    html += `
+      <div class="compare-card">
+        <div class="cc-header">
+          <span class="cc-icon">${item.icon}</span>
+          <span class="cc-title">${item.title}</span>
+          <span class="cc-badge" style="color:${badgeColor};background:${badgeBg}">${badge}</span>
+        </div>
+        <div class="cc-body">
+          <div class="bar-row">
+            <div class="bar-meta">
+              <span class="bar-label">貴施設</span>
+              <div class="bar-values">
+                <span class="bar-my" style="color:${barColor}">${item.myVal}</span>
+                <span class="bar-sep">${item.unit}</span>
+                <span class="bar-avg-val">vs 平均 ${item.avg}${item.unit}</span>
+              </div>
+            </div>
+            <div class="bar-track">
+              <div class="bar-avg-line" style="left:${avgPct}%"></div>
+              <div class="bar-fill" style="width:${myPct}%;background:${barColor}"></div>
+            </div>
+          </div>
+          <div class="advice-box">${item.advice}</div>
+        </div>
+      </div>`;
+  });
+
+  // NDソフトウェア接続
+  const improvements = [];
+  if(myVals.rec > AVG.rec.val) improvements.push('ほのぼのNEXT・ほのぼのVoiceで記録業務を最大65%削減');
+  if(myVals.ot > AVG.ot.val) improvements.push('記録・請求のICT化で残業時間の短縮を支援');
+  if(myVals.tr > AVG.tr.val) improvements.push('業務負担軽減による離職防止＋職場環境改善補助金の活用');
+  if(myVals.night > AVG.night.val) improvements.push('ほのぼのIoTクラウドの見守りセンサーで夜間巡視を65%削減');
+
+  if(improvements.length > 0) {
+    html += `
+      <div class="nd-card">
+        <div class="nd-card-title">📌 NDソフトウェアで改善できること</div>
+        <div class="nd-items">
+          ${improvements.map(t => `<div class="nd-item">${t}</div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  html += `
+    <div class="source-note">
+      【出典・根拠データ】<br>
+      記録業務時間：厚生労働省 介護サービス事業における生産性向上に資するガイドライン（ICT導入前実態調査）<br>
+      月間残業時間：公益財団法人介護労働安定センター「介護労働実態調査（令和5年度）」<br>
+      請求ミス・返戻率：介護給付費請求実態（国保連データ・業界推計値より）<br>
+      年間離職率：同上（介護職全体の離職率14.4%）<br>
+      夜間巡視回数：厚労省 介護ロボット等による生産性向上の取組に関する効果測定事業報告書（令和5年度）
+    </div>`;
+
+  body.innerHTML = html;
+  // アニメーション用
+  setTimeout(() => {
+    document.querySelectorAll('.bar-fill').forEach(el => { el.style.transition = 'width .9s cubic-bezier(.34,1.2,.64,1)'; });
+  }, 50);
+}
+
+// ===== PDF印刷 =====
+function printResult() {
+  const today = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  const items = [
+    {id:'rec',icon:'📝',label:'記録業務時間',myV:myVals.rec,avgV:AVG.rec.val,unit:'分/人/日'},
+    {id:'ot', icon:'⏰',label:'月間残業時間',myV:myVals.ot, avgV:AVG.ot.val, unit:'時間/月'},
+    {id:'ret',icon:'🧾',label:'請求ミス・返戻率',myV:myVals.ret,avgV:AVG.ret.val,unit:'%'},
+    {id:'tr', icon:'👤',label:'年間離職率',  myV:myVals.tr, avgV:AVG.tr.val, unit:'%'},
+    {id:'night',icon:'🌙',label:'夜間巡視回数',myV:myVals.night,avgV:AVG.night.val,unit:'回/夜勤'},
+  ];
+  const metricsHtml = items.map(i => {
+    const diff = Math.round((i.myV/i.avgV-1)*100);
+    const color = diff>20?'#dc2626':diff>0?'#d97706':'#16a34a';
+    return '<div class="ps-metric-box" style="border-top-color:'+color+'">'
+      +'<div class="ps-metric-lbl">'+i.icon+' '+i.label+'</div>'
+      +'<div class="ps-metric-my" style="color:'+color+'">'+i.myV+'<span style="font-size:11px;font-weight:400;color:#64748b"> '+i.unit+'</span></div>'
+      +'<div class="ps-metric-avg">業界平均 '+i.avgV+' '+i.unit+(diff>0?' (平均+'+(diff)+'%)':' (平均以下)')+'</div>'
+      +'</div>';
+  }).join('');
+
+  const ndHtml = [];
+  if(myVals.rec > AVG.rec.val) ndHtml.push('→ ほのぼのNEXT・ほのぼのVoiceで記録業務を最大65%削減');
+  if(myVals.ot > AVG.ot.val)   ndHtml.push('→ 記録・請求のICT化で残業時間の短縮を支援');
+  if(myVals.tr > AVG.tr.val)   ndHtml.push('→ 業務負担軽減による離職防止＋職場環境改善補助金の活用');
+  if(myVals.night > AVG.night.val) ndHtml.push('→ ほのぼのIoTクラウドの見守りセンサーで夜間巡視を65%削減');
+
+  const sheet = document.getElementById('pdf-sheet');
+  sheet.innerHTML =
+    '<button class="ps-close" onclick="closePrint()">✕</button>'
+    +'<div class="ps-wrap">'
+    +'<div class="ps-header"><div><div class="ps-logo">NDソフトウェア株式会社</div><div class="ps-logo-sub">ブース 業界平均比較レポート</div></div><div class="ps-date">'+today+'</div></div>'
+    +'<div class="ps-title-bar"><div class="ps-main-title">介護現場 業界平均比較診断</div><div class="ps-main-sub">4指標の現状と業界平均との比較</div></div>'
+    +'<div class="ps-section" style="padding-top:14px">'
+    +'<div class="ps-section-label">比較結果（4指標）</div>'
+    +'<div class="ps-metric-row">'+metricsHtml+'</div>'
+    +(ndHtml.length>0?'<div class="ps-section"><div class="ps-section-label">NDソフトウェアで改善できること</div><div class="ps-nd">'+ndHtml.join('<br>')+'</div></div>':'')
+    +'<div class="ps-section" style="padding-top:12px"><div class="ps-source">【出典】介護労働安定センター「介護労働実態調査（令和5年度）」／厚労省 生産性向上ガイドライン・介護ロボット等効果測定事業報告書（令和5年度）<br>※数値は業界の代表的な統計値であり、サービス種別・施設規模により異なります。詳細はスタッフまでお問い合わせください。</div></div>'
+    +'</div>'
+    +'<div class="ps-footer"><span>NDソフトウェア株式会社 / ND Software Co., Ltd.</span><span>詳細はブーススタッフまで</span></div>'
+    +'</div>';
+  sheet.classList.add('open');
+  setTimeout(()=>window.print(),300);
+}
+function closePrint(){const s=document.getElementById('pdf-sheet');s.classList.remove('open');s.innerHTML='';}
+
+// ===== ナビ・初期化 =====
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('reset-btn').style.display = id==='s1'?'none':'block';
+}
+function goToResult() { buildResult(); goTo('s3'); }
+function resetApp() {
+  ['rec','ot','tr','night'].forEach(id=>{
+    const el=document.getElementById('s-'+id);
+    sv(id,el.value,'');updateFill(id);
+  });
+  document.getElementById('modal-email').value='';
+  document.getElementById('modal-org').value='';
+  document.getElementById('modal-form').style.display='block';
+  document.getElementById('modal-success').classList.remove('show');
+  closeModal();closePrint();goTo('s1');
+}
+function openModal(){document.getElementById('modal').classList.add('open')}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+function sendResult(){
+  const email=document.getElementById('modal-email').value.trim();
+  if(!email||!email.includes('@')){document.getElementById('modal-email').style.borderColor='#dc2626';setTimeout(()=>document.getElementById('modal-email').style.borderColor='',1400);return;}
+  document.getElementById('modal-form').style.display='none';
+  document.getElementById('modal-success').classList.add('show');
+  setTimeout(()=>{closeModal();resetApp();},3500);
+}
+function callStaff(){alert('スタッフをお呼びします。\n少々お待ちください。');}
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// 初期スライダーフィル
+['rec','ot','tr','night'].forEach(id=>{
+  const el=document.getElementById('s-'+id);
+  updateFill(id);
+  sv(id,el.value,'');
+});
+</script>
+</body>
+</html>

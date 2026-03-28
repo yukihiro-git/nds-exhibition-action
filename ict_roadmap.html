@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ICT化ロードマップ自動生成ツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f7f8fc;--surface:#fff;--surface2:#f0f4fa;--border:#e2e8f0;
+  --accent:#1a5c9a;--gold:#f59e0b;--green:#16a34a;
+  --p1:#1a5c9a;--p1bg:#eff6ff;--p1b:#bfdbfe;
+  --p2:#0f766e;--p2bg:#f0fdfa;--p2b:#99f6e4;
+  --p3:#7c3aed;--p3bg:#f5f3ff;--p3b:#ddd6fe;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --sans:"Noto Sans JP",sans-serif;--display:"Zen Kaku Gothic New",sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);touch-action:manipulation}
+
+/* 全画面共通 */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;transform:translateY(14px)}
+.screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
+.topbar{background:var(--accent);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tb-title{font-family:var(--display);font-size:13px;font-weight:900}
+.tb-step{font-size:10px;letter-spacing:.08em;background:rgba(255,255,255,.18);padding:3px 10px;border-radius:100px}
+.page-header{padding:16px 20px 0;flex-shrink:0}
+.page-step{font-size:11px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin-bottom:5px;font-weight:600}
+.page-title{font-family:var(--display);font-size:clamp(16px,3.5vw,22px);font-weight:900;line-height:1.25;margin-bottom:3px}
+.page-desc{font-size:12px;color:var(--text2);font-weight:300}
+.scroll-body{flex:1;overflow-y:auto;padding:14px 20px 20px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.scroll-body::-webkit-scrollbar{width:3px}
+.scroll-body::-webkit-scrollbar-thumb{background:var(--border)}
+.page-footer{flex-shrink:0;padding:12px 20px 24px;background:linear-gradient(0deg,var(--bg) 60%,transparent)}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--accent),#0ea5e9);color:#fff;border:none;border-radius:12px;font-family:var(--sans);font-size:15px;font-weight:700;padding:15px;cursor:pointer;transition:opacity .2s;box-shadow:0 4px 16px rgba(26,92,154,.2)}
+.btn-primary:active{opacity:.85}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed}
+.btn-gold{width:100%;background:linear-gradient(135deg,var(--gold),#d97706);color:#fff;border:none;border-radius:12px;font-family:var(--sans);font-size:14px;font-weight:700;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-ghost{background:var(--surface);color:var(--text);border:1.5px solid var(--border);border-radius:12px;font-family:var(--sans);font-size:12px;font-weight:500;padding:14px 12px;cursor:pointer;white-space:nowrap}
+.btn-ghost:active{background:var(--surface2)}
+
+/* S1 アトラクト */
+#s1{overflow:hidden}
+.s1-bg{position:absolute;inset:0;background:linear-gradient(155deg,#0f1f3d 0%,#1a5c9a 55%,#0ea5e9 100%)}
+.s1-inner{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:36px 28px;text-align:center}
+.s1-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:5px 16px;font-size:11px;color:rgba(255,255,255,.85);letter-spacing:.1em;margin-bottom:24px}
+.s1-h1{font-family:var(--display);font-size:clamp(24px,5.5vw,48px);font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.03em;margin-bottom:12px}
+.s1-h1 em{font-style:normal;background:linear-gradient(90deg,#fde68a,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.s1-sub{font-size:13px;color:rgba(255,255,255,.7);line-height:1.85;margin-bottom:36px;font-weight:300;max-width:420px}
+.s1-cta{display:inline-flex;align-items:center;gap:10px;background:#fff;color:var(--accent);border:none;border-radius:100px;font-family:var(--sans);font-size:15px;font-weight:700;padding:16px 38px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .15s}
+.s1-cta:active{transform:scale(.97)}
+.s1-note{margin-top:14px;font-size:11px;color:rgba(255,255,255,.4)}
+
+/* S2 施設属性 */
+.sel-group{margin-bottom:18px}
+.sel-label{font-size:11px;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;margin-bottom:9px;font-weight:500}
+.sel-grid{display:grid;gap:9px}
+.col3{grid-template-columns:1fr 1fr 1fr}
+.sel-btn{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:13px 10px;cursor:pointer;text-align:center;transition:all .2s;font-family:var(--sans)}
+.sel-btn.on{border-color:var(--accent);background:rgba(26,92,154,.06)}
+.sel-icon{font-size:20px;margin-bottom:5px;display:block}
+.sel-text{font-size:13px;font-weight:600;color:var(--text)}
+.sel-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.sel-btn.on .sel-text{color:var(--accent)}
+
+/* S3 優先課題 */
+.pri-card{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:13px 16px;margin-bottom:9px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px}
+.pri-card.on{border-color:var(--gold);background:rgba(245,158,11,.05)}
+.pri-icon{font-size:20px;flex-shrink:0}
+.pri-text{font-size:13px;font-weight:600;color:var(--text);flex:1}
+.pri-chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.pri-card.on .pri-chk{background:var(--gold);border-color:var(--gold)}
+.pri-limit{font-size:11px;color:var(--text3);margin-top:8px;text-align:center}
+
+/* S4 ロードマップ結果 */
+#s4{overflow:hidden}
+.result-scroll{flex:1;overflow-y:auto;padding:14px 20px 14px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.result-scroll::-webkit-scrollbar{width:3px}
+.result-scroll::-webkit-scrollbar-thumb{background:var(--border)}
+.rm-header{background:linear-gradient(135deg,var(--accent),#0ea5e9);border-radius:14px;padding:16px 18px;margin-bottom:14px;color:#fff}
+.rm-h-title{font-family:var(--display);font-size:17px;font-weight:900;margin-bottom:5px}
+.rm-h-sub{font-size:12px;opacity:.82;line-height:1.6}
+.rm-h-tags{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.rm-h-tag{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:100px;font-size:10px;padding:3px 10px}
+.phase-sec{margin-bottom:16px}
+.phase-lbl{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.phase-badge{font-size:11px;font-weight:700;letter-spacing:.06em;padding:5px 14px;border-radius:100px}
+.phase-time{font-size:12px;color:var(--text2);font-weight:500}
+.ac-card{background:var(--surface);border-left:4px solid;border-radius:0 12px 12px 0;overflow:hidden;margin-bottom:9px;border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.ac-head{padding:12px 14px;display:flex;align-items:flex-start;gap:10px}
+.ac-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.ac-axis{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+.ac-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px}
+.ac-effect{font-size:12px;color:var(--text2);line-height:1.6}
+.ac-foot{padding:9px 14px;border-top:1px solid var(--border);background:#fafbfc;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ac-tags{display:flex;gap:5px;flex-wrap:wrap;flex:1}
+.ac-tag{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:500}
+.tag-hojo{background:#fef9c3;color:#854d0e;border:1px solid #fde68a}
+.tag-nd{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.ac-diff{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:3px;flex-shrink:0}
+.ac-stars{color:var(--gold)}
+.rm-note{background:var(--surface2);border-radius:10px;padding:11px 13px;font-size:11px;color:var(--text3);line-height:1.75;margin-bottom:12px}
+.excl-open-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text2);padding:11px 16px;cursor:pointer;transition:all .2s;margin-bottom:14px}
+.excl-open-btn:active{background:var(--surface2)}
+.excl-badge{font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:2px 8px;color:var(--text3)}
+.excl-badge.active{background:#fee2e2;color:#dc2626;border-color:#fca5a5}
+.s4-footer{flex-shrink:0;padding:10px 20px 22px;background:linear-gradient(0deg,var(--bg) 60%,transparent)}
+.s4-btn-row{display:flex;gap:8px}
+
+/* S5 除外チェック */
+#s5{}
+.excl-hint{font-size:12px;color:var(--text2);background:var(--surface2);border-radius:10px;padding:10px 14px;margin-bottom:14px;line-height:1.7}
+.excl-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:13px 16px;margin-bottom:9px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;user-select:none}
+.excl-card.on{border-color:#94a3b8;background:var(--surface2)}
+.excl-main{flex:1}
+.excl-ph{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+.excl-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;transition:all .2s}
+.excl-card.on .excl-title{text-decoration:line-through;color:var(--text3)}
+.excl-nd{font-size:11px;color:var(--text3);margin-top:2px}
+.excl-chk{width:24px;height:24px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--surface);transition:all .2s}
+.excl-card.on .excl-chk{background:#94a3b8;border-color:#94a3b8}
+
+/* Modal */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+.modal-ov.open{display:flex}
+.modal{width:100%;background:var(--surface);border-radius:22px 22px 0 0;padding:24px 24px 42px;animation:slide-up .3s cubic-bezier(.34,1.2,.64,1)}
+@keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-family:var(--display);font-size:18px;font-weight:900;margin-bottom:5px}
+.modal-desc{font-size:13px;color:var(--text2);margin-bottom:16px;font-weight:300}
+.modal-inp{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:var(--sans);font-size:16px;color:var(--text);padding:13px 14px;margin-bottom:9px;transition:border-color .2s}
+.modal-inp:focus{outline:none;border-color:var(--accent)}
+.modal-inp::placeholder{color:var(--text3)}
+.modal-send{width:100%;background:linear-gradient(135deg,var(--gold),#d97706);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:15px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px}
+.modal-cancel{width:100%;background:none;border:none;font-family:var(--sans);font-size:13px;color:var(--text3);padding:8px;cursor:pointer}
+.modal-ok{display:none;text-align:center;padding:16px 0}
+.modal-ok.show{display:block}
+.mok-icon{font-size:44px;margin-bottom:10px}
+.mok-text{font-size:16px;font-weight:700;color:var(--green)}
+.mok-sub{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.7}
+
+/* PDF */
+@media print{body>*:not(#pdf-sheet){display:none!important}#pdf-sheet{display:block!important}@page{size:A4 portrait;margin:0}}
+#pdf-sheet{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);overflow-y:auto;padding:28px 16px 56px;box-sizing:border-box;font-family:"Noto Sans JP","Meiryo",sans-serif}
+#pdf-sheet.open{display:block}
+.ps-wrap{width:210mm;min-height:297mm;margin:0 auto;background:#fff;position:relative;padding:0 0 60px;box-shadow:0 4px 40px rgba(0,0,0,.4)}
+.ps-hd{background:#1a5c9a;color:#fff;padding:15px 22px;display:flex;justify-content:space-between;align-items:center}
+.ps-logo{font-size:13px;font-weight:700}.ps-s{font-size:10px;opacity:.7;margin-top:2px}.ps-date{font-size:10px;opacity:.6;text-align:right}
+.ps-tb{background:#eff6ff;border-bottom:4px solid #1a5c9a;padding:14px 22px 12px}
+.ps-mt{font-size:18px;font-weight:900;color:#0f172a;letter-spacing:-.02em}.ps-ms{font-size:11px;color:#475569;margin-top:3px}
+.ps-ph{padding:11px 22px 0}.ps-ph-l{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;gap:8px}.ps-ph-l::after{content:"";flex:1;height:1px;background:#e2e8f0}
+.ps-ac{border:1px solid #e2e8f0;border-radius:4px;overflow:hidden;margin-bottom:7px;border-left:4px solid}
+.ps-ac-hd{background:#f8fafc;padding:8px 12px;border-bottom:1px solid #f0f0f0}
+.ps-ac-t{font-size:12px;font-weight:700;color:#0f172a}.ps-ac-e{font-size:11px;color:#475569;margin-top:2px;line-height:1.6}
+.ps-ac-ft{padding:6px 12px;display:flex;gap:6px;flex-wrap:wrap}
+.ps-tag{font-size:9px;padding:2px 7px;border-radius:3px;font-weight:500}
+.ps-note-box{padding:0 22px 10px}.ps-note-txt{padding:9px 12px;background:#f8fafc;border-radius:4px;font-size:9px;color:#94a3b8;line-height:1.7}
+.ps-ft{position:absolute;bottom:0;left:0;right:0;background:#1a5c9a;color:#fff;padding:9px 22px;display:flex;justify-content:space-between;font-size:9px}
+.ps-close{position:fixed;top:14px;right:14px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center}
+@media print{.ps-close{display:none!important}}
+.reset-btn{position:fixed;top:12px;right:14px;z-index:300;background:rgba(255,255,255,.92);border:1px solid var(--border);color:var(--text2);border-radius:100px;font-family:var(--sans);font-size:11px;padding:5px 13px;cursor:pointer;display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<button class="reset-btn" id="reset-btn" onclick="resetApp()">← 最初から</button>
+<div id="pdf-sheet"></div>
+
+<!-- S1: アトラクト -->
+<section class="screen active" id="s1">
+  <div class="s1-bg"></div>
+  <div class="s1-inner">
+    <div class="s1-badge">🗺️ 御施設専用 ICT化ロードマップ</div>
+    <h1 class="s1-h1">3ステップで<em>ロードマップ</em>を作ります</h1>
+    <p class="s1-sub">施設情報・優先課題を選ぶだけ。Phase1〜3の具体的な導入ステップと使える補助金を自動生成します。</p>
+    <button class="s1-cta" onclick="showScreen('s2')">ロードマップを作る
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <p class="s1-note">無料・約2分・PDFで持ち帰れます</p>
+  </div>
+</section>
+
+<!-- S2: 施設属性 -->
+<section class="screen" id="s2">
+  <div class="topbar"><div style="display:flex;align-items:center;gap:8px"><span>🗺️</span><span class="tb-title">ICT化ロードマップ</span></div><span class="tb-step">STEP 1 / 2</span></div>
+  <div class="page-header">
+    <div class="page-step">Step 1 — 施設情報</div>
+    <div class="page-title">施設種別と規模を教えてください</div>
+    <div class="page-desc">ロードマップの内容が施設タイプに最適化されます</div>
+  </div>
+  <div class="scroll-body">
+    <div class="sel-group">
+      <div class="sel-label">施設・事業所の種別</div>
+      <div class="sel-grid col3">
+        <button class="sel-btn" onclick="pick('type','visit',this)"><span class="sel-icon">🏠</span><div class="sel-text">訪問系</div><div class="sel-sub">訪問介護・居宅CM等</div></button>
+        <button class="sel-btn" onclick="pick('type','tsusho',this)"><span class="sel-icon">🌅</span><div class="sel-text">通所系</div><div class="sel-sub">デイ・通所リハ等</div></button>
+        <button class="sel-btn" onclick="pick('type','nyusho',this)"><span class="sel-icon">🏥</span><div class="sel-text">入所系</div><div class="sel-sub">特養・老健・GH等</div></button>
+      </div>
+    </div>
+    <div class="sel-group">
+      <div class="sel-label">施設・事業所の規模</div>
+      <div class="sel-grid col3">
+        <button class="sel-btn" onclick="pick('scale','small',this)"><span class="sel-icon">🏘️</span><div class="sel-text">小規模</div><div class="sel-sub">〜29名</div></button>
+        <button class="sel-btn" onclick="pick('scale','mid',this)"><span class="sel-icon">🏢</span><div class="sel-text">中規模</div><div class="sel-sub">30〜99名</div></button>
+        <button class="sel-btn" onclick="pick('scale','large',this)"><span class="sel-icon">🏛️</span><div class="sel-text">大規模</div><div class="sel-sub">100名以上</div></button>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <button class="btn-primary" id="s2-next" onclick="showScreen('s3')" disabled>次へ：優先課題を選ぶ →</button>
+  </div>
+</section>
+
+<!-- S3: 優先課題 -->
+<section class="screen" id="s3">
+  <div class="topbar"><div style="display:flex;align-items:center;gap:8px"><span>🗺️</span><span class="tb-title">ICT化ロードマップ</span></div><span class="tb-step">STEP 2 / 2</span></div>
+  <div class="page-header">
+    <div class="page-step">Step 2 — 優先課題</div>
+    <div class="page-title">いちばん解決したいことは？</div>
+    <div class="page-desc">最大3つまで選択できます</div>
+  </div>
+  <div class="scroll-body">
+    <div class="pri-card" onclick="pickPri('rec_time',this)"><div class="pri-icon">📝</div><div class="pri-text">記録業務の時間を減らしたい</div><div class="pri-chk"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    <div class="pri-card" onclick="pickPri('billing_err',this)"><div class="pri-icon">🧾</div><div class="pri-text">請求ミス・返戻を減らしたい</div><div class="pri-chk"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    <div class="pri-card" onclick="pickPri('info_share',this)"><div class="pri-icon">📡</div><div class="pri-text">スタッフ間の情報共有を改善したい</div><div class="pri-chk"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    <div class="pri-card" onclick="pickPri('night_safe',this)"><div class="pri-icon">🌙</div><div class="pri-text">夜間の安全管理・巡視負担を軽減したい</div><div class="pri-chk"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    <div class="pri-card" onclick="pickPri('turnover',this)"><div class="pri-icon">👥</div><div class="pri-text">スタッフの離職・採用難を改善したい</div><div class="pri-chk"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    <div class="pri-card" onclick="pickPri('overtime',this)"><div class="pri-icon">⏰</div><div class="pri-text">残業を削減したい</div><div class="pri-chk"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    <div class="pri-card" onclick="pickPri('bcp',this)"><div class="pri-icon">🛡️</div><div class="pri-text">BCP（事業継続計画）を整備したい</div><div class="pri-chk"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    <div class="pri-card" onclick="pickPri('kasan',this)"><div class="pri-icon">💰</div><div class="pri-text">加算取得・収益改善につなげたい</div><div class="pri-chk"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    <p class="pri-limit" id="pri-limit">最大3つまで選択できます</p>
+  </div>
+  <div class="page-footer">
+    <button class="btn-primary" id="s3-next" onclick="buildAndShow()" disabled>ロードマップを生成する →</button>
+  </div>
+</section>
+
+<!-- S4: ロードマップ結果 -->
+<section class="screen" id="s4">
+  <div class="topbar"><div style="display:flex;align-items:center;gap:8px"><span>🗺️</span><span class="tb-title">ICT化ロードマップ</span></div><span class="tb-step">完成</span></div>
+  <div class="result-scroll" id="result-body"></div>
+  <div class="s4-footer">
+    <button class="excl-open-btn" id="excl-open-btn" onclick="showExclScreen()">
+      ✂️ 導入済みのものを除外して絞り込む
+      <span class="excl-badge" id="excl-badge">未除外</span>
+    </button>
+    <div class="s4-btn-row">
+      <button class="btn-gold" onclick="openModal()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 4h12v9a1 1 0 01-1 1H3a1 1 0 01-1-1V4zm4 0V3a1 1 0 011-1h2a1 1 0 011 1v1" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>PDFをメールで受け取る</button>
+      <button class="btn-ghost" onclick="printRM()">PDF</button>
+      <button class="btn-ghost" onclick="callStaff()">スタッフを呼ぶ</button>
+    </div>
+  </div>
+</section>
+
+<!-- S5: 除外チェック -->
+<section class="screen" id="s5">
+  <div class="topbar"><div style="display:flex;align-items:center;gap:8px"><span>🗺️</span><span class="tb-title">ICT化ロードマップ</span></div><span class="tb-step">STEP 3</span></div>
+  <div class="page-header">
+    <div class="page-step">Step 3 — 導入済みを除外</div>
+    <div class="page-title">すでに導入しているものは？</div>
+    <div class="page-desc">チェックを入れるとロードマップから除外されます</div>
+  </div>
+  <div class="scroll-body" id="excl-list"></div>
+  <div class="page-footer">
+    <button class="btn-primary" onclick="applyExcl()">この内容でロードマップを更新する →</button>
+  </div>
+</section>
+
+<!-- Modal -->
+<div class="modal-ov" id="modal">
+  <div class="modal">
+    <div id="modal-form">
+      <div class="modal-title">ロードマップをお送りします</div>
+      <div class="modal-desc">メールアドレスを入力するだけ。担当者から詳細もご案内します。</div>
+      <input class="modal-inp" type="email" id="modal-email" placeholder="メールアドレス">
+      <input class="modal-inp" type="text" id="modal-org" placeholder="法人名・施設名（任意）">
+      <button class="modal-send" onclick="sendRM()">ロードマップを受け取る</button>
+      <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
+    </div>
+    <div class="modal-ok" id="modal-ok">
+      <div class="mok-icon">✅</div>
+      <div class="mok-text">送信しました！</div>
+      <div class="mok-sub">ロードマップPDFと担当者からのご案内をお送りします。</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 状態 =====
+var attrs = {type: null, scale: null};
+var priorities = new Set();
+var excluded = new Set(); // 除外されたアクションID
+var builtActions = [];    // buildで生成されたアクション一覧 [{phase, id, ...}]
+
+// ===== アクションマスター =====
+var ACTIONS = {
+  rec_next: {
+    icon:'📝', axis:'記録・情報共有',
+    title:'介護記録ソフト導入（ほのぼのNEXT）',
+    effect:'記録・請求・情報共有を一元化。申し送りの転記作業を廃止し月10〜15時間/人削減へ。',
+    diff:2, hojo:['介護テクノロジー補助金（75〜80%助成）','IT導入補助金（1/2〜2/3）'],
+    nd:'ほのぼのNEXT', phase:1,
+    forPri:['rec_time','billing_err','overtime','info_share'],
+  },
+  voice: {
+    icon:'🎤', axis:'記録・情報共有',
+    title:'音声入力記録（ほのぼのVoice）',
+    effect:'ケアしながら声で記録完了。手書き・PC入力から解放され、記録時間を最大65%削減。',
+    diff:1, hojo:['介護テクノロジー補助金'],
+    nd:'ほのぼのVoice', phase:1,
+    forPri:['rec_time','overtime'],
+  },
+  bill_check: {
+    icon:'🧾', axis:'請求・事務',
+    title:'請求自動点検・返戻削減（ほのぼのNEXT）',
+    effect:'レセプト提出前の自動エラーチェックで返戻率を大幅削減。月末作業を最大50%短縮。',
+    diff:1, hojo:['IT導入補助金'],
+    nd:'ほのぼのNEXT / ほのぼのmore', phase:1,
+    forPri:['billing_err','overtime'],
+  },
+  careplan_link: {
+    icon:'🔗', axis:'請求・事務',
+    title:'ケアプランデータ連携システム導入',
+    effect:'居宅事業所間のデータをシステム連携。FAX・郵送・持参を廃止し月間工数55%削減。',
+    diff:2, hojo:['介護テクノロジー補助金（優先対象）'],
+    nd:'ほのぼのNEXT / ケアプランデータ連携', phase:2,
+    forPri:['billing_err','rec_time'],
+  },
+  sensor: {
+    icon:'🌙', axis:'夜間・安全管理',
+    title:'見守りセンサー＋IoTクラウド連携導入',
+    effect:'異変のある時だけ対応できる体制へ。夜間巡視を65%削減し夜勤スタッフの疲弊を解消。',
+    diff:3, hojo:['介護テクノロジー補助金（ロボット区分）'],
+    nd:'ほのぼのIoTクラウド', phase:2,
+    forPri:['night_safe','turnover','bcp'],
+  },
+  vital: {
+    icon:'💓', axis:'夜間・安全管理',
+    title:'バイタル自動測定・記録連携',
+    effect:'バイタル測定値を自動取込。転記ゼロ・入力ミスゼロで記録品質を向上。',
+    diff:2, hojo:['介護テクノロジー補助金'],
+    nd:'ほのぼのNEXT + バイタル連携機器', phase:2,
+    forPri:['night_safe','rec_time'],
+  },
+  ict_kaizen: {
+    icon:'👥', axis:'人材確保・定着',
+    title:'ICT活用で生産性向上推進体制加算を取得',
+    effect:'ICT導入後のデータ活用で加算取得。採用ブランド向上と収益改善を同時に実現。',
+    diff:2, hojo:['介護分野 賃上げ・職場環境改善支援事業','キャリアアップ助成金'],
+    nd:'ほのぼのNEXT（データ出力・レポート機能）', phase:3,
+    forPri:['turnover','kasan','overtime'],
+  },
+  life_link: {
+    icon:'📊', axis:'人材確保・定着',
+    title:'LIFE連携・科学的介護推進体制加算の取得',
+    effect:'科学的介護推進体制加算を取得。ケアの質を数値化し加算収益とスタッフのやりがいを両立。',
+    diff:3, hojo:['加算取得による収益改善'],
+    nd:'ほのぼのNEXT（LIFE連携対応）', phase:3,
+    forPri:['kasan','turnover'],
+  },
+  bcp_cloud: {
+    icon:'☁️', axis:'BCP対策',
+    title:'データのクラウド化・バックアップ整備',
+    effect:'データをクラウドへ。災害・感染症時もシステム継続。BCP義務化の要件を満たす基盤に。',
+    diff:2, hojo:['BCP対策補助金（自治体）','中小企業強靱化法 税制優遇'],
+    nd:'ほのぼのNEXT（クラウド版）', phase:2,
+    forPri:['bcp','turnover'],
+  },
+  wifi_prep: {
+    icon:'📶', axis:'BCP・通信インフラ',
+    title:'施設内Wi-Fi整備（ICT化の土台）',
+    effect:'安定したWi-Fi環境はすべてのICT化の前提条件。補助金を活用して先に整備を。',
+    diff:2, hojo:['介護テクノロジー補助金（Wi-Fi工事費対象）'],
+    nd:'Wi-Fi整備後のND製品導入をサポート', phase:1,
+    forPri:['rec_time','night_safe','bcp'],
+  },
+};
+
+// ===== 画面遷移 =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) {
+    s.classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  document.getElementById('reset-btn').style.display = id === 's1' ? 'none' : 'block';
+}
+
+// ===== S2: 施設属性 =====
+function pick(key, val, el) {
+  attrs[key] = val;
+  el.closest('.sel-grid').querySelectorAll('.sel-btn').forEach(function(b) {
+    b.classList.remove('on');
+  });
+  el.classList.add('on');
+  document.getElementById('s2-next').disabled = !(attrs.type && attrs.scale);
+}
+
+// ===== S3: 優先課題 =====
+function pickPri(id, el) {
+  if (priorities.has(id)) {
+    priorities.delete(id);
+    el.classList.remove('on');
+  } else {
+    if (priorities.size >= 3) return;
+    priorities.add(id);
+    el.classList.add('on');
+  }
+  var rem = 3 - priorities.size;
+  document.getElementById('pri-limit').textContent = rem > 0 ? 'あと' + rem + 'つ選べます' : '3つ選択しました';
+  document.getElementById('s3-next').disabled = priorities.size === 0;
+}
+
+// ===== ロードマップ生成 =====
+function buildAndShow() {
+  excluded.clear();
+  buildRoadmap();
+  showScreen('s4');
+  updateExclBtn();
+}
+
+function buildRoadmap() {
+  var typeLabel = {visit:'訪問系', tsusho:'通所系', nyusho:'入所系'}[attrs.type] || '';
+  var scaleLabel = {small:'小規模', mid:'中規模', large:'大規模'}[attrs.scale] || '';
+  var phConf = [
+    {num:1, label:'Phase 1', time:'今すぐ〜3ヶ月', color:'var(--p1)', bg:'var(--p1bg)', border:'var(--p1b)'},
+    {num:2, label:'Phase 2', time:'3〜6ヶ月',      color:'var(--p2)', bg:'var(--p2bg)', border:'var(--p2b)'},
+    {num:3, label:'Phase 3', time:'6ヶ月〜1年',    color:'var(--p3)', bg:'var(--p3bg)', border:'var(--p3b)'},
+  ];
+
+  // スコアリング・除外処理
+  var scored = [];
+  Object.keys(ACTIONS).forEach(function(id) {
+    if (excluded.has(id)) return;
+    var a = ACTIONS[id];
+    var score = 0;
+    a.forPri.forEach(function(p) { if (priorities.has(p)) score += 3; });
+    if (id === 'sensor' && attrs.type !== 'nyusho') score -= 2;
+    if (score <= 0) score = 1; // 全部最低1点で表示候補に
+    scored.push({id:id, score:score, data:a});
+  });
+  scored.sort(function(a, b) { return b.score - a.score; });
+
+  // フェーズ別振り分け（各最大3件）
+  var phases = {1:[], 2:[], 3:[]};
+  scored.forEach(function(s) {
+    var ph = s.data.phase;
+    if (phases[ph].length < 3) phases[ph].push(s);
+  });
+
+  // builtActionsを更新（除外チェック画面用）
+  builtActions = [];
+  [1,2,3].forEach(function(n) {
+    phases[n].forEach(function(s) {
+      builtActions.push({id: s.id, phase: n, data: s.data});
+    });
+  });
+
+  // HTML生成
+  var priNames = {rec_time:'記録削減', billing_err:'返戻削減', info_share:'情報共有', night_safe:'夜間管理', turnover:'離職防止', overtime:'残業削減', bcp:'BCP対策', kasan:'加算取得'};
+  var priTags = Array.from(priorities).map(function(p) {
+    return '<div class="rm-h-tag">✓ ' + (priNames[p] || p) + '</div>';
+  }).join('');
+  var exclTag = excluded.size > 0 ? '<div class="rm-h-tag" style="background:rgba(255,255,255,.08)">✂️ ' + excluded.size + '件除外済み</div>' : '';
+
+  var html = '<div class="rm-header">'
+    + '<div class="rm-h-title">🗺️ ' + typeLabel + '（' + scaleLabel + '）向け ICT化ロードマップ</div>'
+    + '<div class="rm-h-sub">優先課題と施設情報をもとに最適な導入順序を生成しました。</div>'
+    + '<div class="rm-h-tags">' + priTags + exclTag + '</div>'
+    + '</div>';
+
+  phConf.forEach(function(ph) {
+    var items = phases[ph.num];
+    if (!items.length) return;
+    html += '<div class="phase-sec">'
+      + '<div class="phase-lbl">'
+      + '<span class="phase-badge" style="background:' + ph.bg + ';color:' + ph.color + ';border:1px solid ' + ph.border + '">' + ph.label + '</span>'
+      + '<span class="phase-time">📅 ' + ph.time + '</span>'
+      + '</div>';
+    items.forEach(function(s, i) {
+      var a = s.data;
+      html += '<div class="ac-card" style="border-left-color:' + ph.color + ';animation:fadeUp .4s ' + (i * 0.1) + 's ease both;opacity:0">'
+        + '<div class="ac-head">'
+        + '<span class="ac-icon">' + a.icon + '</span>'
+        + '<div>'
+        + '<div class="ac-axis" style="color:' + ph.color + '">' + a.axis + '</div>'
+        + '<div class="ac-title">' + a.title + '</div>'
+        + '<div class="ac-effect">' + a.effect + '</div>'
+        + '</div>'
+        + '</div>'
+        + '<div class="ac-foot">'
+        + '<div class="ac-tags">'
+        + a.hojo.map(function(h) { return '<span class="ac-tag tag-hojo">💰 ' + h + '</span>'; }).join('')
+        + '<span class="ac-tag tag-nd">📌 ' + a.nd + '</span>'
+        + '</div>'
+        + '<div class="ac-diff"><span class="ac-stars">' + '★'.repeat(a.diff) + '☆'.repeat(3 - a.diff) + '</span>難易度</div>'
+        + '</div>'
+        + '</div>';
+    });
+    html += '</div>';
+  });
+
+  if (!builtActions.length) {
+    html += '<div class="rm-note">条件に合うアクションがありません。除外を解除するか課題を追加してください。</div>';
+  }
+  html += '<div class="rm-note">※本ロードマップは入力情報をもとに自動生成した参考案です。補助金は毎年変わりますので最新情報は各窓口へご確認ください。</div>';
+
+  document.getElementById('result-body').innerHTML = html;
+}
+
+// ===== S5: 除外チェック =====
+function showExclScreen() {
+  var phLabels = {1:'Phase 1 — 今すぐ〜3ヶ月', 2:'Phase 2 — 3〜6ヶ月', 3:'Phase 3 — 6ヶ月〜1年'};
+  var phColors = {1:'var(--p1)', 2:'var(--p2)', 3:'var(--p3)'};
+
+  var html = '<div class="excl-hint">✅ チェックを入れたアクションはロードマップから除外されます。<br>「これはすでに導入済みです」というものにチェックしてください。</div>';
+
+  builtActions.forEach(function(item) {
+    var a = item.data;
+    var isOn = excluded.has(item.id);
+    var eid = item.id;
+    html += '<div class="excl-card' + (isOn ? ' on' : '') + '" id="ec-' + eid + '" onclick="toggleExcl(&quot;' + eid + '&quot;)">'
+      + '<span style="font-size:18px;flex-shrink:0">' + a.icon + '</span>'
+      + '<div class="excl-main">'
+      + '<div class="excl-ph" style="color:' + phColors[item.phase] + '">' + phLabels[item.phase] + '</div>'
+      + '<div class="excl-title">' + a.title + '</div>'
+      + '<div class="excl-nd">📌 ' + a.nd + '</div>'
+      + '</div>'
+      + '<div class="excl-chk"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
+      + '</div>';
+  });
+
+  document.getElementById('excl-list').innerHTML = html;
+  showScreen('s5');
+}
+
+function toggleExcl(id) {
+  var el = document.getElementById('ec-' + id);
+  if (!el) return;
+  if (excluded.has(id)) {
+    excluded.delete(id);
+    el.classList.remove('on');
+  } else {
+    excluded.add(id);
+    el.classList.add('on');
+  }
+}
+
+function applyExcl() {
+  buildRoadmap();
+  updateExclBtn();
+  showScreen('s4');
+}
+
+function updateExclBtn() {
+  var badge = document.getElementById('excl-badge');
+  if (!badge) return;
+  if (excluded.size > 0) {
+    badge.textContent = excluded.size + '件除外中';
+    badge.classList.add('active');
+  } else {
+    badge.textContent = '未除外';
+    badge.classList.remove('active');
+  }
+}
+
+// ===== PDF =====
+function printRM() {
+  var today = new Date().toLocaleDateString('ja-JP', {year:'numeric', month:'long', day:'numeric'});
+  var typeLabel = {visit:'訪問系', tsusho:'通所系', nyusho:'入所系'}[attrs.type] || '';
+  var scaleLabel = {small:'小規模', mid:'中規模', large:'大規模'}[attrs.scale] || '';
+  var phColors = {1:'#1a5c9a', 2:'#0f766e', 3:'#7c3aed'};
+  var phLabels = {1:'Phase 1 — 今すぐ〜3ヶ月', 2:'Phase 2 — 3〜6ヶ月', 3:'Phase 3 — 6ヶ月〜1年'};
+
+  var phases = {1:[], 2:[], 3:[]};
+  builtActions.forEach(function(item) { phases[item.phase].push(item); });
+
+  var pHtml = '';
+  [1,2,3].forEach(function(n) {
+    var items = phases[n];
+    if (!items.length) return;
+    var cHtml = items.map(function(item) {
+      var a = item.data;
+      var tags = a.hojo.map(function(h) { return '<span class="ps-tag" style="background:#fef9c3;color:#854d0e">💰 ' + h + '</span>'; }).join('') + '<span class="ps-tag" style="background:#eff6ff;color:#1d4ed8">📌 ' + a.nd + '</span>';
+      return '<div class="ps-ac" style="border-left-color:' + phColors[n] + '"><div class="ps-ac-hd"><div class="ps-ac-t">' + a.title + '</div><div class="ps-ac-e">' + a.effect + '</div></div><div class="ps-ac-ft">' + tags + '</div></div>';
+    }).join('');
+    pHtml += '<div class="ps-ph"><div class="ps-ph-l" style="color:' + phColors[n] + '">' + phLabels[n] + '</div>' + cHtml + '</div>';
+  });
+
+  var sheet = document.getElementById('pdf-sheet');
+  sheet.innerHTML = '<button class="ps-close" onclick="closePrint()">✕</button>'
+    + '<div class="ps-wrap">'
+    + '<div class="ps-hd"><div><div class="ps-logo">NDソフトウェア株式会社</div><div class="ps-s">ブース ICT化ロードマップ</div></div><div class="ps-date">' + today + '</div></div>'
+    + '<div class="ps-tb"><div class="ps-mt">ICT化ロードマップ — ' + typeLabel + '（' + scaleLabel + '）</div><div class="ps-ms">優先課題に基づく Phase1〜3 導入計画</div></div>'
+    + pHtml
+    + '<div class="ps-note-box"><div class="ps-note-txt">※本ロードマップは入力情報をもとに自動生成した参考案です。補助金情報は毎年変わりますので最新情報は各窓口へご確認ください。詳細はブーススタッフまでお気軽にご相談ください。</div></div>'
+    + '<div class="ps-ft"><span>NDソフトウェア株式会社 / ND Software Co., Ltd.</span><span>詳細はブーススタッフまで</span></div>'
+    + '</div>';
+  sheet.classList.add('open');
+  setTimeout(function() { window.print(); }, 300);
+}
+function closePrint() {
+  var s = document.getElementById('pdf-sheet');
+  s.classList.remove('open');
+  s.innerHTML = '';
+}
+
+// ===== Modal =====
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function sendRM() {
+  var email = document.getElementById('modal-email').value.trim();
+  if (!email || !email.includes('@')) {
+    document.getElementById('modal-email').style.borderColor = '#ef4444';
+    setTimeout(function() { document.getElementById('modal-email').style.borderColor = ''; }, 1400);
+    return;
+  }
+  document.getElementById('modal-form').style.display = 'none';
+  document.getElementById('modal-ok').classList.add('show');
+  setTimeout(function() { closeModal(); resetApp(); }, 3500);
+}
+document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+function callStaff() { alert('スタッフをお呼びします。\n少々お待ちください。'); }
+
+// ===== Reset =====
+function resetApp() {
+  attrs = {type: null, scale: null};
+  priorities.clear();
+  excluded.clear();
+  builtActions = [];
+  document.querySelectorAll('.sel-btn').forEach(function(b) { b.classList.remove('on'); });
+  document.querySelectorAll('.pri-card').forEach(function(c) { c.classList.remove('on'); });
+  document.getElementById('s2-next').disabled = true;
+  document.getElementById('s3-next').disabled = true;
+  document.getElementById('pri-limit').textContent = '最大3つまで選択できます';
+  document.getElementById('modal-email').value = '';
+  document.getElementById('modal-org').value = '';
+  document.getElementById('modal-form').style.display = 'block';
+  document.getElementById('modal-ok').classList.remove('show');
+  closeModal();
+  closePrint();
+  showScreen('s1');
+}
+</script>
+</body>
+</html>
